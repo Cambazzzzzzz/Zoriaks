@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NEXO Admin Panel</title>
+  <link rel="icon" type="image/png" href="nexologo1.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="admin.css"/>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">NEXO</div>
+    <div class="login-sub">Admin Panel</div>
+    <form id="loginForm">
+      <div class="login-field">
+        <input type="password" id="loginPassword" placeholder="Sifre" autocomplete="current-password"/>
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button type="submit" class="login-btn">Giris Yap</button>
+    </form>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-wrap" id="adminWrap" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">NEXO</div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-link active" data-page="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="sidebar-link" data-page="products">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Urunler
+      </button>
+      <button class="sidebar-link" data-page="collections">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        Koleksiyonlar
+      </button>
+      <button class="sidebar-link" data-page="orders">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Siparisler
+      </button>
+      <button class="sidebar-link" data-page="users">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Kullanicilar
+      </button>
+      <button class="sidebar-link" data-page="discounts">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        Indirim Kodlari
+      </button>
+      <button class="sidebar-link" data-page="settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Ayarlar
+      </button>
+    </nav>
+    <button class="sidebar-logout" id="logoutBtn">Cikis Yap</button>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header"><h1>Dashboard</h1></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-info"><span class="stat-val" id="stat-products">-</span><span class="stat-lbl">Toplam Urun</span></div></div>
+        <div class="stat-card"><div class="stat-info"><span class="stat-val" id="stat-orders">-</span><span class="stat-lbl">Toplam Siparis</span></div></div>
+        <div class="stat-card"><div class="stat-info"><span class="stat-val" id="stat-pending">-</span><span class="stat-lbl">Bekleyen Siparis</span></div></div>
+        <div class="stat-card"><div class="stat-info"><span class="stat-val" id="stat-revenue">-</span><span class="stat-lbl">Toplam Gelir</span></div></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page" id="page-products">
+      <div class="page-header">
+        <h1>Urunler</h1>
+        <div style="display:flex;gap:12px;align-items:center">
+          <input type="text" id="productSearch" placeholder="Urun ara..." class="admin-search" oninput="loadProducts(this.value)"/>
+          <button class="btn-add" id="addProductBtn">+ Yeni Urun</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Foto</th><th>ID</th><th>Ad</th><th>Kategori</th><th>Koleksiyon</th><th>Fiyat</th><th>Stok</th><th>Islem</th></tr></thead>
+          <tbody id="productsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COLLECTIONS -->
+    <div class="page" id="page-collections">
+      <div class="page-header">
+        <h1>Koleksiyonlar</h1>
+        <button class="btn-add" id="addCollectionBtn">+ Yeni Koleksiyon</button>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>ID</th><th>Ad</th><th>Slug</th><th>Aciklama</th><th>Islem</th></tr></thead>
+          <tbody id="collectionsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="page" id="page-orders">
+      <div class="page-header">
+        <h1>Siparisler</h1>
+        <input type="text" id="orderSearch" placeholder="ID, musteri, sehir, urun ara..." class="admin-search" style="width:300px" oninput="loadOrders(this.value)"/>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>ID</th><th>Musteri</th><th>Sehir</th><th>Toplam</th><th>Durum</th><th>Tarih</th><th>Islem</th></tr></thead>
+          <tbody id="ordersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDER EDIT MODAL -->
+    <div class="modal-overlay" id="orderEditOverlay" onclick="closeOrderEdit()"></div>
+    <div class="modal" id="orderEditModal" style="max-width:800px">
+      <div class="modal-header"><h2>Siparis Duzenle</h2><button onclick="closeOrderEdit()">x</button></div>
+      <div style="padding:28px;max-height:80vh;overflow-y:auto">
+        <input type="hidden" id="orderEditId"/>
+        <div class="modal-grid">
+          <div class="form-group"><label>Musteri Adi</label><input type="text" id="oe-name"/></div>
+          <div class="form-group"><label>Telefon</label><input type="text" id="oe-phone"/></div>
+          <div class="form-group full"><label>Adres</label><input type="text" id="oe-address"/></div>
+          <div class="form-group"><label>Sehir</label><input type="text" id="oe-city"/></div>
+          <div class="form-group"><label>Ilce</label><input type="text" id="oe-district"/></div>
+          <div class="form-group"><label>Durum</label>
+            <select id="oe-status">
+              <option value="pending">Bekliyor</option>
+              <option value="processing">Isleniyor</option>
+              <option value="shipped">Kargoda</option>
+              <option value="delivered">Teslim Edildi</option>
+              <option value="cancelled">Iptal</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Toplam (TL)</label><input type="number" id="oe-total" step="0.01"/></div>
+        </div>
+        <h4 style="margin:20px 0 12px;font-size:14px">Kargo Takip</h4>
+        <div class="modal-grid">
+          <div class="form-group"><label>Kargo Firmasi</label><input type="text" id="oe-shipping-co" placeholder="Yurtici, Aras, MNG..."/></div>
+          <div class="form-group"><label>Takip Numarasi</label><input type="text" id="oe-tracking-num" placeholder="123456789"/></div>
+          <div class="form-group full"><label>Takip URL</label><input type="text" id="oe-tracking-url" placeholder="https://..."/></div>
+        </div>
+        <h4 style="margin:20px 0 12px;font-size:14px">Urunler</h4>
+        <div id="oe-items" style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px"></div>
+        <div class="modal-footer">
+          <button type="button" onclick="closeOrderEdit()" class="btn-cancel">Iptal</button>
+          <button type="button" onclick="saveOrderEdit()" class="btn-save">Kaydet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="page-header"><h1>Kayitli Kullanicilar</h1></div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Ad Soyad</th><th>E-posta</th><th>Telefon</th><th>Sehir</th><th>Siparis</th><th>Kayit Tarihi</th><th>Detay</th></tr></thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-overlay" id="userDetailOverlay" onclick="closeUserDetail()"></div>
+    <div class="modal" id="userDetailModal" style="max-width:800px">
+      <div class="modal-header"><h2 id="userDetailTitle">Kullanici Detayi</h2><button onclick="closeUserDetail()">x</button></div>
+      <div id="userDetailContent" style="padding:28px;max-height:70vh;overflow-y:auto"></div>
+    </div>
+
+    <!-- DISCOUNTS -->
+    <div class="page" id="page-discounts">
+      <div class="page-header">
+        <h1>Indirim Kodlari</h1>
+        <button class="btn-add" id="addDiscountBtn">+ Yeni Kod</button>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Kod</th><th>Tip</th><th>Deger</th><th>Min Siparis</th><th>Kullanim</th><th>Durum</th><th>Islem</th></tr></thead>
+          <tbody id="discountsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-overlay" id="discountModalOverlay" onclick="closeDiscountModal()"></div>
+    <div class="modal" id="discountModal">
+      <div class="modal-header"><h2>Yeni Indirim Kodu</h2><button onclick="closeDiscountModal()">x</button></div>
+      <form id="discountForm" style="padding:28px">
+        <div class="modal-grid">
+          <div class="form-group"><label>Kod *</label><input type="text" id="dc-code" placeholder="NEXO20" required/></div>
+          <div class="form-group"><label>Tip</label><select id="dc-type"><option value="percent">Yuzde (%)</option><option value="fixed">Sabit (TL)</option></select></div>
+          <div class="form-group"><label>Deger *</label><input type="number" id="dc-value" step="0.01" required/></div>
+          <div class="form-group"><label>Min Siparis (TL)</label><input type="number" id="dc-min" placeholder="0"/></div>
+          <div class="form-group"><label>Max Kullanim (0=sinirsiz)</label><input type="number" id="dc-max" placeholder="0"/></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" onclick="closeDiscountModal()" class="btn-cancel">Iptal</button>
+          <button type="submit" class="btn-save">Kaydet</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header"><h1>Ayarlar</h1></div>
+      <div class="settings-grid">
+
+        <!-- Announcement Bar -->
+        <div class="settings-card full">
+          <h3>Duyuru Bandi</h3>
+          <form id="announcementForm">
+            <div class="form-row-3">
+              <div class="form-group">
+                <label>Durum</label>
+                <select id="set-ann-enabled">
+                  <option value="1">Acik</option>
+                  <option value="0">Kapali</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Arkaplan Rengi</label>
+                <div class="color-input-wrap">
+                  <input type="color" id="set-ann-bg" value="#000000"/>
+                  <input type="text" id="set-ann-bg-text" value="#000000" placeholder="#000000"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Yazi Rengi</label>
+                <div class="color-input-wrap">
+                  <input type="color" id="set-ann-color" value="#ffffff"/>
+                  <input type="text" id="set-ann-color-text" value="#ffffff" placeholder="#ffffff"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Kayma Hizi (saniye)</label>
+                <input type="number" id="set-ann-speed" value="30" min="5" max="120"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Duyuru Metni</label>
+              <input type="text" id="set-announcement" placeholder="Metin 1  Metin 2  Metin 3"/>
+            </div>
+            <button type="submit" class="btn-save">Kaydet</button>
+          </form>
+        </div>
+
+        <!-- Site Settings -->
+        <div class="settings-card">
+          <h3>Site Ayarlari</h3>
+          <form id="siteSettingsForm">
+            <div class="form-group"><label>Site Adi</label><input type="text" id="set-site-name"/></div>
+            <div class="form-group"><label>Ucretsiz Kargo Limiti (TL)</label><input type="number" id="set-shipping"/></div>
+            <div class="form-group"><label>Instagram URL</label><input type="text" id="set-instagram"/></div>
+            <div class="form-group"><label>E-posta</label><input type="email" id="set-email"/></div>
+            <button type="submit" class="btn-save">Kaydet</button>
+          </form>
+        </div>
+
+        <!-- Password -->
+        <div class="settings-card">
+          <h3>Sifre Degistir</h3>
+          <form id="passwordForm">
+            <div class="form-group"><label>Mevcut Sifre</label><input type="password" id="cur-pass"/></div>
+            <div class="form-group"><label>Yeni Sifre</label><input type="password" id="new-pass"/></div>
+            <div class="form-group"><label>Yeni Sifre (Tekrar)</label><input type="password" id="new-pass2"/></div>
+            <div class="pass-error" id="passError"></div>
+            <button type="submit" class="btn-save">Sifreyi Degistir</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-overlay" id="productModalOverlay" onclick="closeProductModal()"></div>
+<div class="modal" id="productModal">
+  <div class="modal-header">
+    <h2 id="productModalTitle">Yeni Urun</h2>
+    <button onclick="closeProductModal()">x</button>
+  </div>
+  <form id="productForm">
+    <input type="hidden" id="productId"/>
+    <div class="modal-grid">
+      <div class="form-group"><label>Urun Adi *</label><input type="text" id="p-name" required/></div>
+      <div class="form-group"><label>Kategori *</label>
+        <select id="p-category">
+          <option value="hoodie">Hoodie</option>
+          <option value="tshirt">T-Shirt</option>
+          <option value="sweatshirt">Sweatshirt</option>
+          <option value="aksesuar">Aksesuar</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Fiyat (TL) *</label><input type="number" id="p-price" step="0.01" required/></div>
+      <div class="form-group"><label>Eski Fiyat (TL)</label><input type="number" id="p-old-price" step="0.01"/></div>
+      <div class="form-group"><label>Koleksiyon</label><select id="p-collection"></select></div>
+      <div class="form-group"><label>Bedenler (virgülle ayir)</label><input type="text" id="p-sizes" value="S,M,L,XL,XXL"/></div>
+
+      <!-- STOK -->
+      <div class="form-group full">
+        <label>Stok Durumu</label>
+        <div class="stock-options">
+          <label class="radio-label"><input type="radio" name="stock_type" value="count" id="stock-type-count" checked/> Adet gir</label>
+          <label class="radio-label"><input type="radio" name="stock_type" value="unlimited" id="stock-type-unlimited"/> Sinirsiz</label>
+          <label class="radio-label"><input type="radio" name="stock_type" value="out" id="stock-type-out"/> Stokta yok</label>
+        </div>
+        <div id="stock-count-wrap" style="margin-top:10px">
+          <input type="number" id="p-stock" value="100" min="0" placeholder="Stok adedi"/>
+        </div>
+      </div>
+
+      <div class="form-group full"><label>Aciklama</label><textarea id="p-desc" rows="3"></textarea></div>
+
+      <!-- IMAGES -->
+      <div class="form-group full">
+        <label>Resimler</label>
+        <div class="image-upload-area" id="imageUploadArea">
+          <input type="file" id="p-images-file" multiple accept="image/*" style="display:none"/>
+          <div class="upload-placeholder" onclick="document.getElementById('p-images-file').click()">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Cihazdan resim sec</span>
+          </div>
+          <div class="image-previews" id="imagePreviews"></div>
+        </div>
+        <div class="form-group" style="margin-top:10px">
+          <label>veya URL ile ekle (virgülle ayir)</label>
+          <input type="text" id="p-images-url" placeholder="https://..."/>
+        </div>
+        <label style="margin-top:8px;display:flex;align-items:center;gap:8px;font-size:13px;color:#666">
+          <input type="checkbox" id="p-keep-images"/> Mevcut resimleri koru (duzenleme modunda)
+        </label>
+      </div>
+
+      <div class="form-group"><label><input type="checkbox" id="p-featured"/> One Cikan Urun</label></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" onclick="closeProductModal()" class="btn-cancel">Iptal</button>
+      <button type="submit" class="btn-save" id="productSubmitBtn">Kaydet</button>
+    </div>
+  </form>
+</div>
+
+<!-- COLLECTION MODAL -->
+<div class="modal-overlay" id="collectionModalOverlay" onclick="closeCollectionModal()"></div>
+<div class="modal" id="collectionModal">
+  <div class="modal-header">
+    <h2 id="collectionModalTitle">Yeni Koleksiyon</h2>
+    <button onclick="closeCollectionModal()">x</button>
+  </div>
+  <form id="collectionForm">
+    <input type="hidden" id="collectionId"/>
+    <div class="form-group"><label>Koleksiyon Adi *</label><input type="text" id="c-name" required/></div>
+    <div class="form-group"><label>Aciklama</label><textarea id="c-desc" rows="3"></textarea></div>
+    <div class="modal-footer">
+      <button type="button" onclick="closeCollectionModal()" class="btn-cancel">Iptal</button>
+      <button type="submit" class="btn-save">Kaydet</button>
+    </div>
+  </form>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="adminToast"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">NEXO</div>
+    <div class="login-sub">Admin Panel</div>
+    <form id="loginForm">
+      <div class="login-field">
+        <input type="password" id="loginPassword" placeholder="Şifre" autocomplete="current-password"/>
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button type="submit" class="login-btn">Giriş Yap</button>
+    </form>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-wrap" id="adminWrap" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">NEXO</div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-link active" data-page="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="sidebar-link" data-page="products">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Ürünler
+      </button>
+      <button class="sidebar-link" data-page="orders">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Siparişler
+      </button>
+      <button class="sidebar-link" data-page="settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Ayarlar
+      </button>
+    </nav>
+    <button class="sidebar-logout" id="logoutBtn">Çıkış Yap</button>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header"><h1>Dashboard</h1></div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-info"><span class="stat-val" id="stat-products">-</span><span class="stat-lbl">Toplam Ürün</span></div></div>
+        <div class="stat-card"><div class="stat-icon">🛒</div><div class="stat-info"><span class="stat-val" id="stat-orders">-</span><span class="stat-lbl">Toplam Sipariş</span></div></div>
+        <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-info"><span class="stat-val" id="stat-pending">-</span><span class="stat-lbl">Bekleyen Sipariş</span></div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-info"><span class="stat-val" id="stat-revenue">-</span><span class="stat-lbl">Toplam Gelir</span></div></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page" id="page-products">
+      <div class="page-header">
+        <h1>Ürünler</h1>
+        <button class="btn-add" id="addProductBtn">+ Yeni Ürün</button>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table" id="productsTable">
+          <thead><tr><th>ID</th><th>Ad</th><th>Kategori</th><th>Fiyat</th><th>Stok</th><th>İşlem</th></tr></thead>
+          <tbody id="productsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="page" id="page-orders">
+      <div class="page-header"><h1>Siparişler</h1></div>
+      <div class="table-wrap">
+        <table class="admin-table" id="ordersTable">
+          <thead><tr><th>ID</th><th>Müşteri</th><th>Toplam</th><th>Durum</th><th>Tarih</th><th>İşlem</th></tr></thead>
+          <tbody id="ordersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header"><h1>Ayarlar</h1></div>
+      <div class="settings-grid">
+        <div class="settings-card">
+          <h3>Site Ayarları</h3>
+          <form id="siteSettingsForm">
+            <div class="form-group"><label>Site Adı</label><input type="text" name="site_name" id="set-site-name"/></div>
+            <div class="form-group"><label>Duyuru Metni</label><input type="text" name="announcement" id="set-announcement"/></div>
+            <div class="form-group"><label>Ücretsiz Kargo Limiti (TL)</label><input type="number" name="free_shipping_threshold" id="set-shipping"/></div>
+            <div class="form-group"><label>Instagram URL</label><input type="text" name="instagram" id="set-instagram"/></div>
+            <div class="form-group"><label>E-posta</label><input type="email" name="email" id="set-email"/></div>
+            <button type="submit" class="btn-save">Kaydet</button>
+          </form>
+        </div>
+        <div class="settings-card">
+          <h3>Şifre Değiştir</h3>
+          <form id="passwordForm">
+            <div class="form-group"><label>Mevcut Şifre</label><input type="password" id="cur-pass"/></div>
+            <div class="form-group"><label>Yeni Şifre</label><input type="password" id="new-pass"/></div>
+            <div class="form-group"><label>Yeni Şifre (Tekrar)</label><input type="password" id="new-pass2"/></div>
+            <div class="pass-error" id="passError"></div>
+            <button type="submit" class="btn-save">Şifreyi Değiştir</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-overlay" id="productModalOverlay" onclick="closeProductModal()"></div>
+<div class="modal" id="productModal">
+  <div class="modal-header">
+    <h2 id="productModalTitle">Yeni Ürün</h2>
+    <button onclick="closeProductModal()">✕</button>
+  </div>
+  <form id="productForm" enctype="multipart/form-data">
+    <input type="hidden" id="productId"/>
+    <div class="modal-grid">
+      <div class="form-group"><label>Ürün Adı *</label><input type="text" id="p-name" required/></div>
+      <div class="form-group"><label>Kategori *</label>
+        <select id="p-category">
+          <option value="hoodie">Hoodie</option>
+          <option value="tshirt">T-Shirt</option>
+          <option value="sweatshirt">Sweatshirt</option>
+          <option value="aksesuar">Aksesuar</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Fiyat (TL) *</label><input type="number" id="p-price" step="0.01" required/></div>
+      <div class="form-group"><label>Eski Fiyat (TL)</label><input type="number" id="p-old-price" step="0.01"/></div>
+      <div class="form-group"><label>Stok</label><input type="number" id="p-stock" value="100"/></div>
+      <div class="form-group"><label>Koleksiyon</label>
+        <select id="p-collection">
+          <option value="drop01">Drop 01</option>
+          <option value="essentials">Essentials</option>
+          <option value="limited">Limited</option>
+        </select>
+      </div>
+      <div class="form-group full"><label>Açıklama</label><textarea id="p-desc" rows="3"></textarea></div>
+      <div class="form-group full"><label>Bedenler (virgülle ayır)</label><input type="text" id="p-sizes" value="S,M,L,XL,XXL"/></div>
+      <div class="form-group full"><label>Resim URL'leri (virgülle ayır)</label><input type="text" id="p-images" placeholder="https://..."/></div>
+      <div class="form-group"><label><input type="checkbox" id="p-featured"/> Öne Çıkan</label></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" onclick="closeProductModal()" class="btn-cancel">İptal</button>
+      <button type="submit" class="btn-save">Kaydet</button>
+    </div>
+  </form>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="adminToast"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>

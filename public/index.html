@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEXO — Define Your Era</title>
+  <link rel="icon" type="image/png" href="nexologo1.png" />
+  <link rel="apple-touch-icon" href="nexologo1.png" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ANNOUNCEMENT BAR -->
+  <div class="announcement-bar">
+    <div class="announcement-track">
+      <span>ÜCRETSİZ KARGO — ₺1500 VE ÜZERİ</span>
+      <span class="dot">✦</span>
+      <span>YENİ KOLEKSİYON ÇIKTI — NEXO DROP 01</span>
+      <span class="dot">✦</span>
+      <span>30 GÜN İADE HAKKI</span>
+      <span class="dot">✦</span>
+      <span>ÜCRETSİZ KARGO — ₺1500 VE ÜZERİ</span>
+      <span class="dot">✦</span>
+      <span>YENİ KOLEKSİYON ÇIKTI — NEXO DROP 01</span>
+      <span class="dot">✦</span>
+      <span>30 GÜN İADE HAKKI</span>
+      <span class="dot">✦</span>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-left">
+      <button class="nav-icon-btn" id="menuBtn" aria-label="Menü">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+    <div class="nav-center">
+      <a href="#" class="logo">NEXO</a>
+    </div>
+    <div class="nav-right">
+      <button class="nav-icon-btn" id="searchBtn" aria-label="Ara">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+      <a href="#" class="nav-icon-btn" id="authBtn" aria-label="Hesabım">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </a>
+      <button class="nav-icon-btn cart-btn" id="cartBtn" aria-label="Sepet">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-menu-inner">
+      <button class="close-menu" id="closeMenu">✕</button>
+      <nav class="mobile-nav">
+        <a href="#collections" class="mobile-nav-link" onclick="closeMobileMenu()">Koleksiyonlar</a>
+        <a href="#products" class="mobile-nav-link" onclick="closeMobileMenu()">Ürünler</a>
+        <a href="#about" class="mobile-nav-link" onclick="closeMobileMenu()">Hakkımızda</a>
+        <a href="#contact" class="mobile-nav-link" onclick="closeMobileMenu()">İletişim</a>
+      </nav>
+      <div class="mobile-menu-footer">
+        <a href="#">Giriş Yap</a>
+        <a href="#">Kayıt Ol</a>
+      </div>
+    </div>
+  </div>
+  <div class="menu-overlay" id="menuOverlay" onclick="closeMobileMenu()"></div>
+
+  <!-- SEARCH OVERLAY -->
+  <div class="search-overlay" id="searchOverlay">
+    <div class="search-inner">
+      <button class="close-search" id="closeSearch">✕</button>
+      <input type="text" class="search-input" placeholder="Ne arıyorsunuz?" id="searchInput" />
+      <div class="search-suggestions">
+        <span>Popüler:</span>
+        <button onclick="searchFor('Hoodie')">Hoodie</button>
+        <button onclick="searchFor('T-Shirt')">T-Shirt</button>
+        <button onclick="searchFor('Sweatshirt')">Sweatshirt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <div class="hero-gradient"></div>
+      <div class="hero-noise"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-logo-wrap">
+        <img src="nexologo1.png" alt="Nexo Logo" class="hero-logo-img" />
+      </div>
+      <div class="hero-badge">DROP 01 — 2026</div>
+      <h1 class="hero-title">
+        <span class="hero-line">KALİTEYE</span>
+        <span class="hero-line outline">UY!</span>
+      </h1>
+      <p class="hero-sub">Giyinmeyi bile zorlaştıran sisteme kafa tutan marka.</p>
+      <div class="hero-actions">
+        <a href="#products" class="btn-primary">Koleksiyonu Keşfet</a>
+        <a href="#about" class="btn-ghost">Hikayemiz</a>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <span>Aşağı Kaydır</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-section">
+    <div class="marquee-track">
+      <span>NEXO</span><span class="mx">✦</span>
+      <span>STREETWEAR</span><span class="mx">✦</span>
+      <span>DROP 01</span><span class="mx">✦</span>
+      <span>2026</span><span class="mx">✦</span>
+      <span>DEFINE YOUR ERA</span><span class="mx">✦</span>
+      <span>NEXO</span><span class="mx">✦</span>
+      <span>STREETWEAR</span><span class="mx">✦</span>
+      <span>DROP 01</span><span class="mx">✦</span>
+      <span>2026</span><span class="mx">✦</span>
+      <span>DEFINE YOUR ERA</span><span class="mx">✦</span>
+    </div>
+  </div>
+
+  <!-- COLLECTIONS -->
+  <section class="collections" id="collections">
+    <div class="section-header">
+      <span class="section-tag">Koleksiyonlar</span>
+      <h2 class="section-title">Sezon Seçkileri</h2>
+    </div>
+    <div class="collections-grid">
+      <div class="collection-card large" data-collection="drop01">
+        <div class="collection-img" style="background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);">
+          <div class="collection-overlay-text">DROP 01</div>
+        </div>
+        <div class="collection-info">
+          <h3>NEXO DROP 01</h3>
+          <p>Karanlık tonlar, cesur siluetler</p>
+          <a href="#products" class="collection-link">Görüntüle →</a>
+        </div>
+      </div>
+      <div class="collection-card" data-collection="essentials">
+        <div class="collection-img" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);">
+          <div class="collection-overlay-text">ESS</div>
+        </div>
+        <div class="collection-info">
+          <h3>ESSENTIALS</h3>
+          <p>Temel parçalar, sonsuz kombinler</p>
+          <a href="#products" class="collection-link">Görüntüle →</a>
+        </div>
+      </div>
+      <div class="collection-card" data-collection="limited">
+        <div class="collection-img" style="background: linear-gradient(135deg, #0d0d0d 0%, #1a0a2e 100%);">
+          <div class="collection-overlay-text">LTD</div>
+        </div>
+        <div class="collection-info">
+          <h3>LIMITED</h3>
+          <p>Sınırlı sayıda, özel üretim</p>
+          <a href="#products" class="collection-link">Görüntüle →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section class="products-section" id="products">
+    <div class="section-header">
+      <span class="section-tag">Ürünler</span>
+      <h2 class="section-title">Tüm Ürünler</h2>
+    </div>
+
+    <!-- FILTER TABS -->
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-filter="all">Tümü</button>
+      <button class="filter-tab" data-filter="hoodie">Hoodie</button>
+      <button class="filter-tab" data-filter="tshirt">T-Shirt</button>
+      <button class="filter-tab" data-filter="sweatshirt">Sweatshirt</button>
+      <button class="filter-tab" data-filter="aksesuar">Aksesuar</button>
+    </div>
+
+    <div class="products-grid" id="productsGrid">
+      <!-- Products injected by JS -->
+    </div>
+
+    <div class="load-more-wrap">
+      <button class="btn-outline" id="loadMoreBtn">Daha Fazla Yükle</button>
+    </div>
+  </section>
+
+  <!-- ABOUT / BRAND STORY -->
+  <section class="about-section" id="about">
+    <div class="about-inner">
+      <div class="about-text">
+        <span class="section-tag">Hakkımızda</span>
+        <h2 class="about-title">Sokaktan Doğan<br/>Bir Kimlik.</h2>
+        <p class="about-desc">
+          Nexo, sıradan olanı reddeden, kendi çağını tanımlamak isteyenler için tasarlandı. Her parça bir manifesto, her dikiş bir kararlılık ifadesi.
+        </p>
+        <p class="about-desc">
+          2026'da başlayan bu yolculuk, sokak kültürünün ham enerjisini premium kaliteyle buluşturuyor. Biz sadece giysi üretmiyoruz — bir duruş yaratıyoruz.
+        </p>
+        <a href="#contact" class="btn-primary">Bizimle İletişime Geç</a>
+      </div>
+      <div class="about-visual">
+        <div class="about-card">
+          <div class="about-stat">
+            <span class="stat-num">01</span>
+            <span class="stat-label">Drop Koleksiyonu</span>
+          </div>
+          <div class="about-stat">
+            <span class="stat-num">100%</span>
+            <span class="stat-label">Premium Kumaş</span>
+          </div>
+          <div class="about-stat">
+            <span class="stat-num">30</span>
+            <span class="stat-label">Gün İade Hakkı</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features-section">
+    <div class="features-grid">
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h4>256-Bit SSL</h4>
+        <p>Güvenli alışveriş garantisi</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <h4>Ücretsiz Kargo</h4>
+        <p>₺1500 ve üzeri siparişlerde</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </div>
+        <h4>30 Gün İade</h4>
+        <p>Koşulsuz iade hakkı</p>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h4>7/24 Destek</h4>
+        <p>Her zaman yanınızdayız</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact-section" id="contact">
+    <div class="contact-inner">
+      <div class="contact-text">
+        <span class="section-tag">İletişim</span>
+        <h2 class="contact-title">Bize Ulaşın</h2>
+        <p>Sorularınız için bize yazın, en kısa sürede dönüş yapalım.</p>
+        <div class="contact-links">
+          <a href="mailto:info@nexo.com.tr">info@nexo.com.tr</a>
+          <a href="https://instagram.com/nexo" target="_blank">@nexo</a>
+        </div>
+      </div>
+      <form class="contact-form" onsubmit="submitForm(event)">
+        <div class="form-row">
+          <input type="text" placeholder="Adınız" required />
+          <input type="email" placeholder="E-posta" required />
+        </div>
+        <textarea placeholder="Mesajınız..." rows="5" required></textarea>
+        <button type="submit" class="btn-primary">Gönder</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <span class="footer-logo">NEXO</span>
+        <p>Olmayacak hayalleri olduran marka.</p>
+        <div class="social-links">
+          <a href="https://instagram.com/nexo" target="_blank" aria-label="Instagram">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </a>
+          <a href="#" aria-label="TikTok">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-links-group">
+        <h5>Kategoriler</h5>
+        <a href="#">Hoodie</a>
+        <a href="#">T-Shirt</a>
+        <a href="#">Sweatshirt</a>
+        <a href="#">Aksesuar</a>
+      </div>
+      <div class="footer-links-group">
+        <h5>Hesabım</h5>
+        <a href="#">Giriş Yap</a>
+        <a href="#">Kayıt Ol</a>
+        <a href="#">Sipariş Takibi</a>
+      </div>
+      <div class="footer-links-group">
+        <h5>Kurumsal</h5>
+        <a href="#">Hakkımızda</a>
+        <a href="#">İletişim</a>
+        <a href="#">S.S.S</a>
+        <a href="#">KVKK</a>
+        <a href="#">İade Politikası</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>©2026 Nexo. Tüm Hakları Saklıdır.</span>
+      <div class="payment-icons">
+        <span class="payment-badge">VISA</span>
+        <span class="payment-badge">MC</span>
+        <span class="payment-badge">AMEX</span>
+        <span class="payment-badge">TR PAY</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- CART DRAWER -->
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-header">
+      <h3>Sepetim</h3>
+      <button class="close-cart" id="closeCart">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <div class="cart-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <p>Sepetiniz boş</p>
+      </div>
+    </div>
+    <div class="cart-footer" id="cartFooter" style="display:none">
+      <div class="cart-total">
+        <span>Toplam</span>
+        <span id="cartTotal">₺0</span>
+      </div>
+      <button class="btn-primary full-width" onclick="window.location.href='/checkout'">Odemeye Gec</button>
+    </div>
+  </div>
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+
+  <!-- PRODUCT MODAL -->
+  <div class="product-modal" id="productModal">
+    <div class="modal-inner">
+      <button class="close-modal" id="closeModal">✕</button>
+      <div class="modal-content" id="modalContent"></div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+
+  <!-- AUTH MODAL -->
+  <div class="auth-modal" id="authModal">
+    <div class="auth-inner">
+      <button class="auth-close" id="authClose">✕</button>
+      <div class="auth-logo">NEXO</div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Giris Yap</button>
+        <button class="auth-tab" data-tab="register">Kayit Ol</button>
+      </div>
+
+      <!-- LOGIN -->
+      <form class="auth-form" id="loginForm">
+        <div class="auth-field">
+          <label>E-posta</label>
+          <input type="email" id="loginEmail" placeholder="ornek@mail.com" autocomplete="email" required/>
+        </div>
+        <div class="auth-field">
+          <label>Sifre</label>
+          <input type="password" id="loginPass" placeholder="Sifreniz" autocomplete="current-password" required/>
+        </div>
+        <div class="auth-error" id="loginError"></div>
+        <button type="submit" class="btn-primary full-width">Giris Yap</button>
+      </form>
+
+      <!-- REGISTER -->
+      <form class="auth-form" id="registerForm" style="display:none">
+        <div class="auth-field-row">
+          <div class="auth-field">
+            <label>Ad</label>
+            <input type="text" id="regName" placeholder="Adiniz" autocomplete="given-name"/>
+          </div>
+          <div class="auth-field">
+            <label>Soyad</label>
+            <input type="text" id="regSurname" placeholder="Soyadiniz" autocomplete="family-name"/>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label>E-posta</label>
+          <input type="email" id="regEmail" placeholder="ornek@mail.com" autocomplete="email" required/>
+        </div>
+        <div class="auth-field">
+          <label>Sifre</label>
+          <input type="password" id="regPass" placeholder="En az 6 karakter" autocomplete="new-password" required/>
+        </div>
+        <div class="auth-error" id="registerError"></div>
+        <button type="submit" class="btn-primary full-width">Kayit Ol</button>
+      </form>
+
+      <!-- LOGGED IN -->
+      <div class="auth-user" id="authUser" style="display:none">
+        <div class="auth-avatar" id="authAvatar"></div>
+        <div class="auth-user-name" id="authUserName"></div>
+        <div class="auth-user-email" id="authUserEmail"></div>
+        <a href="#" onclick="closeAuthModal();loadMyOrders();return false;" class="btn-primary full-width" style="margin-top:20px;text-align:center;display:flex;justify-content:center">Siparislerim</a>
+        <button class="auth-logout-btn" id="logoutUserBtn">Cikis Yap</button>
+      </div>
+    </div>
+  </div>
+  <div class="auth-overlay" id="authOverlay" onclick="closeAuthModal()"></div>
+
+  <!-- MY ORDERS MODAL -->
+  <div class="my-orders-modal" id="myOrdersModal">
+    <div class="my-orders-inner">
+      <div class="my-orders-header">
+        <h2>Siparislerim</h2>
+        <button onclick="closeMyOrders()">✕</button>
+      </div>
+      <div class="my-orders-content" id="myOrdersContent"></div>
+    </div>
+  </div>
+  <div class="my-orders-overlay" id="myOrdersOverlay" onclick="closeMyOrders()"></div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

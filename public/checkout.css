@@ -1,0 +1,104 @@
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#fff;font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;border:none;font-family:inherit}
+input,select,textarea{font-family:inherit}
+
+.co-header{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid #1f1f1f;position:sticky;top:0;background:#0a0a0a;z-index:10}
+.co-logo{font-size:20px;font-weight:900;letter-spacing:.15em}
+.co-steps{display:flex;align-items:center;gap:8px;font-size:13px}
+.co-step{color:#444;font-weight:500;transition:color .2s}
+.co-step.active{color:#fff;font-weight:700}
+.co-step-sep{color:#333}
+
+.co-wrap{display:grid;grid-template-columns:1fr 380px;gap:0;max-width:1100px;margin:0 auto;padding:40px 24px;align-items:start}
+
+/* LEFT */
+.co-left{padding-right:60px}
+.co-section{display:none}
+.co-section.active{display:block}
+.co-section-title{font-size:20px;font-weight:800;margin-bottom:24px;letter-spacing:-.01em}
+
+/* DISCOUNT */
+.co-discount{display:flex;gap:8px;margin-bottom:8px}
+.co-discount input{flex:1;background:#111;border:1px solid #1f1f1f;border-radius:8px;padding:12px 14px;color:#fff;font-size:14px;outline:none;transition:border-color .2s}
+.co-discount input:focus{border-color:#fff}
+.co-discount-btn{padding:12px 20px;background:#fff;color:#000;font-weight:700;font-size:13px;border-radius:8px;transition:opacity .2s}
+.co-discount-btn:hover{opacity:.85}
+.co-discount-msg{font-size:13px;margin-bottom:16px;min-height:18px}
+.co-discount-msg.success{color:#4ade80}
+.co-discount-msg.error{color:#ff4444}
+
+/* FORM */
+.co-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.co-field{display:flex;flex-direction:column;gap:8px}
+.co-field.full{grid-column:span 2}
+.co-field label{font-size:12px;color:#666;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.co-field input,.co-field select{background:#111;border:1px solid #1f1f1f;border-radius:8px;padding:12px 14px;color:#fff;font-size:14px;outline:none;transition:border-color .2s}
+.co-field input:focus,.co-field select:focus{border-color:#fff}
+.co-field select option{background:#111}
+.co-phone-wrap{display:flex;align-items:center;background:#111;border:1px solid #1f1f1f;border-radius:8px;overflow:hidden;transition:border-color .2s}
+.co-phone-wrap:focus-within{border-color:#fff}
+.co-phone-prefix{padding:12px 12px;color:#666;font-size:14px;border-right:1px solid #1f1f1f;white-space:nowrap}
+.co-phone-wrap input{border:none;border-radius:0;background:transparent;flex:1}
+
+/* SHIPPING */
+.co-shipping-options{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.co-shipping-opt{display:flex;align-items:center;justify-content:space-between;padding:16px;background:#111;border:1px solid #1f1f1f;border-radius:10px;cursor:pointer;transition:border-color .2s}
+.co-shipping-opt.selected{border-color:#fff}
+.co-shipping-opt-left{display:flex;align-items:center;gap:12px}
+.co-shipping-radio{width:18px;height:18px;border:2px solid #444;border-radius:50%;transition:all .2s;flex-shrink:0}
+.co-shipping-opt.selected .co-shipping-radio{border-color:#fff;background:#fff}
+.co-shipping-name{font-size:14px;font-weight:600}
+.co-shipping-desc{font-size:12px;color:#666;margin-top:2px}
+.co-shipping-price{font-size:15px;font-weight:700}
+.co-shipping-price.free{color:#4ade80}
+
+/* CARD */
+.co-card-box{background:#111;border:1px solid #1f1f1f;border-radius:12px;padding:24px;margin-bottom:20px}
+.co-card-header{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;margin-bottom:20px}
+
+/* CHECKBOX */
+.co-checkbox{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#888;cursor:pointer;margin-bottom:20px;line-height:1.5}
+.co-checkbox input{margin-top:2px;accent-color:#fff;flex-shrink:0}
+
+/* BUTTONS */
+.co-btn-primary{width:100%;padding:16px;background:#fff;color:#000;font-weight:700;font-size:14px;letter-spacing:.05em;text-transform:uppercase;border-radius:8px;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.co-btn-primary:hover{opacity:.85}
+.co-btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.co-btn-back{width:100%;padding:12px;background:transparent;color:#666;font-size:13px;margin-top:12px;transition:color .2s}
+.co-btn-back:hover{color:#fff}
+.co-order-error{color:#ff4444;font-size:13px;margin-bottom:12px;min-height:16px}
+
+/* SUCCESS */
+.co-success{text-align:center;padding:60px 0}
+.co-success-icon{width:80px;height:80px;border-radius:50%;background:rgba(74,222,128,.1);border:2px solid #4ade80;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;color:#4ade80}
+.co-success h2{font-size:24px;font-weight:800;margin-bottom:12px}
+.co-success p{color:#888;margin-bottom:8px}
+
+/* RIGHT: SUMMARY */
+.co-right{background:#111;border:1px solid #1f1f1f;border-radius:16px;padding:28px;position:sticky;top:80px}
+.co-summary-title{font-size:16px;font-weight:700;margin-bottom:20px;letter-spacing:.05em}
+.co-summary-items{display:flex;flex-direction:column;gap:12px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #1f1f1f}
+.co-summary-item{display:flex;gap:12px;align-items:center}
+.co-summary-item-img{width:56px;height:56px;border-radius:8px;background:#161616;overflow:hidden;flex-shrink:0;position:relative}
+.co-summary-item-img img{width:100%;height:100%;object-fit:cover}
+.co-summary-item-badge{position:absolute;top:-6px;right:-6px;background:#fff;color:#000;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.co-summary-item-info{flex:1}
+.co-summary-item-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.co-summary-item-meta{font-size:11px;color:#666}
+.co-summary-item-price{font-size:14px;font-weight:700}
+.co-summary-line{display:flex;justify-content:space-between;font-size:14px;padding:8px 0;color:#888}
+.co-summary-line.total{font-size:18px;font-weight:800;color:#fff;border-top:1px solid #1f1f1f;margin-top:8px;padding-top:16px}
+
+@media(max-width:900px){
+  .co-wrap{grid-template-columns:1fr;padding:24px 16px}
+  .co-left{padding-right:0;margin-bottom:32px}
+  .co-right{position:static}
+  .co-header{padding:16px 20px}
+  .co-steps{display:none}
+}
+@media(max-width:480px){
+  .co-form-grid{grid-template-columns:1fr}
+  .co-field.full{grid-column:span 1}
+}

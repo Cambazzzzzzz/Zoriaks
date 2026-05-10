@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Siparis — NEXO</title>
+  <link rel="icon" type="image/png" href="nexologo1.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="checkout.css"/>
+</head>
+<body>
+  <header class="co-header">
+    <a href="/" class="co-logo">NEXO</a>
+    <div class="co-steps">
+      <span class="co-step active" id="step-label-1">1. Adres</span>
+      <span class="co-step-sep">›</span>
+      <span class="co-step" id="step-label-2">2. Kargo</span>
+      <span class="co-step-sep">›</span>
+      <span class="co-step" id="step-label-3">3. Odeme</span>
+    </div>
+  </header>
+
+  <div class="co-wrap">
+    <!-- LEFT: FORM -->
+    <div class="co-left">
+
+      <!-- STEP 1: ADDRESS -->
+      <div class="co-section active" id="section-1">
+        <h2 class="co-section-title">Teslimat Adresi</h2>
+
+        <div class="co-discount">
+          <input type="text" id="discountInput" placeholder="Indirim kodu"/>
+          <button onclick="applyDiscount()" class="co-discount-btn">Uygula</button>
+        </div>
+        <div class="co-discount-msg" id="discountMsg"></div>
+
+        <div class="co-form-grid">
+          <div class="co-field"><label>Ad *</label><input type="text" id="f-name" required/></div>
+          <div class="co-field"><label>Soyad *</label><input type="text" id="f-surname" required/></div>
+          <div class="co-field full"><label>E-posta *</label><input type="email" id="f-email" required/></div>
+          <div class="co-field full"><label>Telefon *</label>
+            <div class="co-phone-wrap"><span class="co-phone-prefix">+90</span><input type="tel" id="f-phone" placeholder="5XX XXX XX XX" required/></div>
+          </div>
+          <div class="co-field full"><label>Adres *</label><input type="text" id="f-address" placeholder="Mahalle, cadde, sokak, bina no" required/></div>
+          <div class="co-field full"><label>Daire / Kat</label><input type="text" id="f-address2" placeholder="Daire no, kat, vb."/></div>
+          <div class="co-field">
+            <label>Il *</label>
+            <select id="f-city" onchange="loadDistricts()" required>
+              <option value="">Il secin</option>
+            </select>
+          </div>
+          <div class="co-field">
+            <label>Ilce *</label>
+            <select id="f-district" required>
+              <option value="">Once il secin</option>
+            </select>
+          </div>
+          <div class="co-field"><label>Posta Kodu</label><input type="text" id="f-zip" placeholder="34000"/></div>
+        </div>
+        <button class="co-btn-primary" onclick="goToShipping()">Kargo ile Devam Et</button>
+      </div>
+
+      <!-- STEP 2: SHIPPING -->
+      <div class="co-section" id="section-2">
+        <h2 class="co-section-title">Kargo Secenegi</h2>
+        <div class="co-shipping-options" id="shippingOptions"></div>
+        <button class="co-btn-primary" onclick="goToPayment()">Odemeye Devam Et</button>
+        <button class="co-btn-back" onclick="goToStep(1)">Geri Don</button>
+      </div>
+
+      <!-- STEP 3: PAYMENT -->
+      <div class="co-section" id="section-3">
+        <h2 class="co-section-title">Odeme</h2>
+        <div class="co-card-box">
+          <div class="co-card-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Kredi / Banka Karti
+          </div>
+          <div class="co-form-grid">
+            <div class="co-field full">
+              <label>Kart Numarasi</label>
+              <input type="text" id="f-card-num" placeholder="0000 0000 0000 0000" maxlength="19" oninput="formatCard(this)"/>
+            </div>
+            <div class="co-field full">
+              <label>Kart Uzerindeki Isim</label>
+              <input type="text" id="f-card-name" placeholder="AD SOYAD"/>
+            </div>
+            <div class="co-field">
+              <label>Son Kullanma Tarihi</label>
+              <input type="text" id="f-card-exp" placeholder="AA/YY" maxlength="5" oninput="formatExp(this)"/>
+            </div>
+            <div class="co-field">
+              <label>CVC</label>
+              <input type="text" id="f-card-cvc" placeholder="000" maxlength="3"/>
+            </div>
+          </div>
+        </div>
+        <label class="co-checkbox">
+          <input type="checkbox" id="f-agree" required/>
+          <span>Mesafeli Satis Sozlesmesi ve On Bilgilendirme Formu okudum, onayliyorum.</span>
+        </label>
+        <div class="co-order-error" id="orderError"></div>
+        <button class="co-btn-primary" onclick="placeOrder()" id="placeOrderBtn">Siparisi Tamamla</button>
+        <button class="co-btn-back" onclick="goToStep(2)">Geri Don</button>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="co-section" id="section-success">
+        <div class="co-success">
+          <div class="co-success-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h2>Siparisıniz Alindi!</h2>
+          <p>Siparis numaraniz: <strong id="successOrderId"></strong></p>
+          <p>Kargoya verildiginde bildirim alacaksiniz.</p>
+          <a href="/" class="co-btn-primary" style="margin-top:24px;display:inline-flex">Alisverise Devam Et</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: ORDER SUMMARY -->
+    <div class="co-right">
+      <h3 class="co-summary-title">Siparis Ozeti</h3>
+      <div class="co-summary-items" id="summaryItems"></div>
+      <div class="co-summary-line"><span>Ara Toplam</span><span id="summarySubtotal">₺0</span></div>
+      <div class="co-summary-line discount-line" id="discountLine" style="display:none"><span>Indirim</span><span id="summaryDiscount" style="color:#4ade80"></span></div>
+      <div class="co-summary-line"><span>Kargo</span><span id="summaryShipping">Hesaplaniyor</span></div>
+      <div class="co-summary-line total"><span>Toplam</span><span id="summaryTotal">₺0</span></div>
+    </div>
+  </div>
+
+  <script src="checkout.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+﻿const fs = require("fs");
+const css = ":root{--bg:#0a0a0a;--fg:#fff}*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--fg);font-family:Inter,sans-serif}.btn-primary{padding:14px 32px;background:#fff;color:#000;font-weight:700;border-radius:4px}.navbar{position:sticky;top:0;background:rgba(10,10,10,.95);padding:16px 24px;display:flex;justify-content:space-between}.hero{min-height:100vh;display:flex;align-items:center;justify-content:center}.hero-title{font-size:clamp(60px,12vw,140px);font-weight:900}.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;padding:24px}.product-card{background:#111;border-radius:12px;overflow:hidden;cursor:pointer}.product-img{height:350px;background:#161616}.product-info{padding:20px}.footer{background:#111;padding:60px 24px;margin-top:100px}";
+fs.writeFileSync("public/style.css", css);
+console.log("done");
