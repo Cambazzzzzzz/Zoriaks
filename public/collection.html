@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Koleksiyon — NEXO</title>
+  <link rel="icon" type="image/png" href="/nexologo1.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/style.css"/>
+  <style>
+    .col-hero{max-width:1100px;margin:0 auto;padding:40px 24px 24px}
+    .col-hero h1{font-size:clamp(26px,4vw,40px);font-weight:900;letter-spacing:-.02em;margin-bottom:12px}
+    .col-hero p{color:var(--muted);font-size:15px;line-height:1.6;max-width:640px}
+    .col-grid-wrap{max-width:1400px;margin:0 auto;padding:0 24px 80px}
+    .col-empty{color:#666;text-align:center;padding:60px 24px}
+  </style>
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="nav-left">
+      <button class="nav-icon-btn" id="menuBtn" aria-label="Menü" type="button">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+    <div class="nav-center">
+      <a href="/" class="logo">
+        <img src="/nexologo1.png" alt="NEXO" class="nav-logo-img"/>
+        NEXO
+      </a>
+    </div>
+    <div class="nav-right"></div>
+  </nav>
+
+  <div class="col-hero" id="colHero">
+    <p style="color:#666">Yukleniyor...</p>
+  </div>
+  <div class="col-grid-wrap">
+    <div class="products-grid" id="colProducts"></div>
+  </div>
+
+  <script>
+    function esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    }
+    const slug = decodeURIComponent((location.pathname.split('/').pop() || '').trim());
+
+    async function run() {
+      const hero = document.getElementById('colHero');
+      const grid = document.getElementById('colProducts');
+      if (!slug) {
+        hero.innerHTML = '<h1>Koleksiyon</h1><p class="col-empty">Gecersiz adres.</p>';
+        return;
+      }
+      try {
+        const r1 = await fetch('/api/collections/by-slug/' + encodeURIComponent(slug));
+        const d1 = await r1.json();
+        if (!d1.success || !d1.collection) {
+          hero.innerHTML = '<h1>Bulunamadi</h1><p style="color:#888">Bu koleksiyon yok veya kaldirildi.</p><p style="margin-top:20px"><a href="/" class="btn-primary" style="display:inline-flex;padding:12px 24px;border-radius:8px">Ana Sayfa</a></p>';
+          grid.innerHTML = '';
+          document.title = 'Koleksiyon — NEXO';
+          return;
+        }
+        const c = d1.collection;
+        document.title = c.name + ' — NEXO';
+        hero.innerHTML = '<h1>' + esc(c.name) + '</h1><p>' + esc(c.description || '') + '</p>';
+
+        const r2 = await fetch('/api/products?collection=' + encodeURIComponent(c.id));
+        const d2 = await r2.json();
+        const products = d2.products || [];
+        if (!products.length) {
+          grid.innerHTML = '<p class="col-empty">Bu koleksiyonda henuz urun yok.</p>';
+          return;
+        }
+        grid.innerHTML = products.map(function (p) {
+          const img = p.images && p.images[0] ? '<img src="' + esc(p.images[0]) + '" alt="' + esc(p.name) + '" loading="lazy">' : '<div class="product-img-placeholder">N</div>';
+          const oldPrice = p.old_price ? '<span class="price-old">&#8378;' + Number(p.old_price).toLocaleString('tr-TR') + '</span>' : '';
+          return '<div class="product-card" onclick="location.href=\'/urun/' + encodeURIComponent(p.slug || p.id) + '\'">'
+            + '<div class="product-img">' + img + '</div>'
+            + '<div class="product-info"><div class="product-cat">' + esc(p.category) + '</div>'
+            + '<div class="product-name">' + esc(p.name) + '</div>'
+            + '<div class="product-price"><span class="price-current">&#8378;' + Number(p.price).toLocaleString('tr-TR') + '</span>' + oldPrice + '</div>'
+            + '</div></div>';
+        }).join('');
+      } catch (e) {
+        hero.innerHTML = '<h1>Hata</h1><p style="color:#888">Baglanti kurulamadi.</p>';
+      }
+    }
+    run();
+  </script>
+</body>
+</html>

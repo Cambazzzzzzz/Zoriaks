@@ -15,8 +15,8 @@ let currentUser = null;
 window.addEventListener('DOMContentLoaded', async () => {
   if (!cart.length) { window.location.href = '/'; return; }
   await loadSettings();
-  await checkAuth();
   populateCities();
+  await checkAuth();
   renderSummary();
   renderShippingOptions();
 });
@@ -29,22 +29,50 @@ async function loadSettings() {
   } catch(e) {}
 }
 
+function digitsPhone(p) {
+  return String(p || '').replace(/^\+90\s*/, '').replace(/\D/g, '');
+}
+
 async function checkAuth() {
   try {
     const r = await fetch('/api/auth/me');
     const d = await r.json();
     currentUser = d.user;
-    if (currentUser) {
-      if (document.getElementById('f-name')) document.getElementById('f-name').value = currentUser.name || '';
-      if (document.getElementById('f-surname')) document.getElementById('f-surname').value = currentUser.surname || '';
-      if (document.getElementById('f-email')) document.getElementById('f-email').value = currentUser.email || '';
-      if (document.getElementById('f-phone')) document.getElementById('f-phone').value = currentUser.phone || '';
-      if (document.getElementById('f-address')) document.getElementById('f-address').value = currentUser.address || '';
-      if (currentUser.city) {
-        document.getElementById('f-city').value = currentUser.city;
-        loadDistricts();
-        setTimeout(() => { if (currentUser.district) document.getElementById('f-district').value = currentUser.district; }, 100);
-      }
+
+    const savedInfo = JSON.parse(localStorage.getItem('nexo_customer_info') || '{}');
+    const u = currentUser || {};
+
+    function pickStr(profileVal, savedVal) {
+      const ps = profileVal != null && String(profileVal).trim() !== '';
+      const ss = savedVal != null && String(savedVal).trim() !== '';
+      if (ps) return String(profileVal).trim();
+      if (ss) return String(savedVal).trim();
+      return '';
+    }
+
+    const name = pickStr(u.name, savedInfo.name);
+    const surname = pickStr(u.surname, savedInfo.surname);
+    const email = pickStr(u.email, savedInfo.email);
+    const phone = digitsPhone(pickStr(u.phone, savedInfo.phone));
+    const address = pickStr(u.address, savedInfo.address);
+    const address2 = savedInfo.address2 != null && String(savedInfo.address2).trim() !== '' ? String(savedInfo.address2).trim() : '';
+    const city = pickStr(u.city, savedInfo.city);
+    const district = pickStr(u.district, savedInfo.district);
+    const zip = savedInfo.zip != null && String(savedInfo.zip).trim() !== '' ? String(savedInfo.zip).trim() : '';
+
+    if (document.getElementById('f-name')) document.getElementById('f-name').value = name;
+    if (document.getElementById('f-surname')) document.getElementById('f-surname').value = surname;
+    if (document.getElementById('f-email')) document.getElementById('f-email').value = email;
+    if (document.getElementById('f-phone')) document.getElementById('f-phone').value = phone;
+    if (document.getElementById('f-address')) document.getElementById('f-address').value = address;
+    if (document.getElementById('f-address2')) document.getElementById('f-address2').value = address2;
+    if (document.getElementById('f-zip')) document.getElementById('f-zip').value = zip;
+    if (city) {
+      document.getElementById('f-city').value = city;
+      loadDistricts();
+      setTimeout(function () {
+        if (district && document.getElementById('f-district')) document.getElementById('f-district').value = district;
+      }, 0);
     }
   } catch(e) {}
 }
@@ -98,7 +126,8 @@ function renderSummary() {
 
 function updateTotals() {
   const subtotal = cart.reduce((s, c) => s + c.price * (c.qty||1), 0);
-  const threshold = parseFloat(settings.free_shipping_threshold || 1500);
+  const freeAll = settings.free_shipping_all === '1' || settings.free_shipping_all === 1;
+  const threshold = freeAll ? 0 : parseFloat(settings.free_shipping_threshold || 1500);
   const shippingCost = parseFloat(settings.shipping_cost || 49.90);
   const shipping = subtotal >= threshold ? 0 : (selectedShipping ? selectedShipping.price : shippingCost);
   const discount = discountData ? discountData.discount : 0;
@@ -117,7 +146,8 @@ function updateTotals() {
 // ─── SHIPPING OPTIONS ─────────────────────────────────────────────
 function renderShippingOptions() {
   const subtotal = cart.reduce((s, c) => s + c.price * (c.qty||1), 0);
-  const threshold = parseFloat(settings.free_shipping_threshold || 1500);
+  const freeAll = settings.free_shipping_all === '1' || settings.free_shipping_all === 1;
+  const threshold = freeAll ? 0 : parseFloat(settings.free_shipping_threshold || 1500);
   const shippingCost = parseFloat(settings.shipping_cost || 49.90);
   const isFree = subtotal >= threshold;
 
@@ -186,6 +216,16 @@ function goToShipping() {
   if (!name || !surname || !email || !phone || !address || !city || !district) {
     alert('Lutfen tum zorunlu alanlari doldurun'); return;
   }
+  
+  // Müşteri bilgilerini localStorage'a kaydet
+  const customerInfo = {
+    name, surname, email, phone, address,
+    address2: document.getElementById('f-address2').value.trim(),
+    city, district,
+    zip: document.getElementById('f-zip').value.trim()
+  };
+  localStorage.setItem('nexo_customer_info', JSON.stringify(customerInfo));
+  
   goToStep(2);
 }
 
@@ -253,6 +293,20 @@ async function placeOrder() {
     const d = await r.json();
     if (d.success) {
       localStorage.removeItem('nexo_cart');
+      try {
+        const customerInfo = {
+          name: document.getElementById('f-name').value.trim(),
+          surname: document.getElementById('f-surname').value.trim(),
+          email: document.getElementById('f-email').value.trim(),
+          phone: document.getElementById('f-phone').value.trim(),
+          address: document.getElementById('f-address').value.trim(),
+          address2: document.getElementById('f-address2').value.trim(),
+          city: document.getElementById('f-city').value,
+          district: document.getElementById('f-district').value,
+          zip: document.getElementById('f-zip').value.trim()
+        };
+        localStorage.setItem('nexo_customer_info', JSON.stringify(customerInfo));
+      } catch (e2) {}
       document.getElementById('successOrderId').textContent = d.orderId;
       goToStep('success');
       document.querySelectorAll('.co-section').forEach(s => s.classList.remove('active'));

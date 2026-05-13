@@ -13,7 +13,17 @@
 </head>
 <body>
 
-  <!-- ANNOUNCEMENT BAR -->
+  <!-- SPLASH SCREEN -->
+  <div class="splash" id="splash">
+    <div class="splash-inner">
+      <img src="nexologo1.png" alt="NEXO" class="splash-logo"/>
+      <div class="splash-brand">NEXO</div>
+      <div class="splash-tagline">Giyinmeyi bile zorlaştıran sisteme kafa tutan marka.</div>
+      <div class="splash-closed-note" id="splashClosedNote" style="display:none"></div>
+      <button type="button" class="splash-btn" id="splashExploreBtn" onclick="closeSplash()">Koleksiyonu Keşfet</button>
+    </div>
+  </div>
+  <div id="mainSite">
   <div class="announcement-bar">
     <div class="announcement-track">
       <span>ÜCRETSİZ KARGO — ₺1500 VE ÜZERİ</span>
@@ -40,7 +50,10 @@
       </button>
     </div>
     <div class="nav-center">
-      <a href="#" class="logo">NEXO</a>
+      <a href="#" class="logo">
+        <img src="nexologo1.png" alt="NEXO" class="nav-logo-img"/>
+        NEXO
+      </a>
     </div>
     <div class="nav-right">
       <button class="nav-icon-btn" id="searchBtn" aria-label="Ara">
@@ -88,33 +101,6 @@
     </div>
   </div>
 
-  <!-- HERO -->
-  <section class="hero" id="hero">
-    <div class="hero-bg">
-      <div class="hero-gradient"></div>
-      <div class="hero-noise"></div>
-    </div>
-    <div class="hero-content">
-      <div class="hero-logo-wrap">
-        <img src="nexologo1.png" alt="Nexo Logo" class="hero-logo-img" />
-      </div>
-      <div class="hero-badge">DROP 01 — 2026</div>
-      <h1 class="hero-title">
-        <span class="hero-line">KALİTEYE</span>
-        <span class="hero-line outline">UY!</span>
-      </h1>
-      <p class="hero-sub">Giyinmeyi bile zorlaştıran sisteme kafa tutan marka.</p>
-      <div class="hero-actions">
-        <a href="#products" class="btn-primary">Koleksiyonu Keşfet</a>
-        <a href="#about" class="btn-ghost">Hikayemiz</a>
-      </div>
-    </div>
-    <div class="hero-scroll">
-      <span>Aşağı Kaydır</span>
-      <div class="scroll-line"></div>
-    </div>
-  </section>
-
   <!-- MARQUEE -->
   <div class="marquee-section">
     <div class="marquee-track">
@@ -130,46 +116,6 @@
       <span>DEFINE YOUR ERA</span><span class="mx">✦</span>
     </div>
   </div>
-
-  <!-- COLLECTIONS -->
-  <section class="collections" id="collections">
-    <div class="section-header">
-      <span class="section-tag">Koleksiyonlar</span>
-      <h2 class="section-title">Sezon Seçkileri</h2>
-    </div>
-    <div class="collections-grid">
-      <div class="collection-card large" data-collection="drop01">
-        <div class="collection-img" style="background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);">
-          <div class="collection-overlay-text">DROP 01</div>
-        </div>
-        <div class="collection-info">
-          <h3>NEXO DROP 01</h3>
-          <p>Karanlık tonlar, cesur siluetler</p>
-          <a href="#products" class="collection-link">Görüntüle →</a>
-        </div>
-      </div>
-      <div class="collection-card" data-collection="essentials">
-        <div class="collection-img" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);">
-          <div class="collection-overlay-text">ESS</div>
-        </div>
-        <div class="collection-info">
-          <h3>ESSENTIALS</h3>
-          <p>Temel parçalar, sonsuz kombinler</p>
-          <a href="#products" class="collection-link">Görüntüle →</a>
-        </div>
-      </div>
-      <div class="collection-card" data-collection="limited">
-        <div class="collection-img" style="background: linear-gradient(135deg, #0d0d0d 0%, #1a0a2e 100%);">
-          <div class="collection-overlay-text">LTD</div>
-        </div>
-        <div class="collection-info">
-          <h3>LIMITED</h3>
-          <p>Sınırlı sayıda, özel üretim</p>
-          <a href="#products" class="collection-link">Görüntüle →</a>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- PRODUCTS -->
   <section class="products-section" id="products">
@@ -193,6 +139,17 @@
 
     <div class="load-more-wrap">
       <button class="btn-outline" id="loadMoreBtn">Daha Fazla Yükle</button>
+    </div>
+  </section>
+
+  <!-- COLLECTIONS -->
+  <section class="collections" id="collections">
+    <div class="section-header">
+      <span class="section-tag">Koleksiyonlar</span>
+      <h2 class="section-title">Sezon Seçkileri</h2>
+    </div>
+    <div class="collections-grid" id="collectionsGrid">
+      <!-- Koleksiyonlar API ile doldurulur -->
     </div>
   </section>
 
@@ -271,16 +228,17 @@
         <h2 class="contact-title">Bize Ulaşın</h2>
         <p>Sorularınız için bize yazın, en kısa sürede dönüş yapalım.</p>
         <div class="contact-links">
-          <a href="mailto:info@nexo.com.tr">info@nexo.com.tr</a>
-          <a href="https://instagram.com/nexo" target="_blank">@nexo</a>
+          <a href="#" id="contactEmail">info@nexo.com.tr</a>
+          <a href="#" id="contactInstagram" target="_blank">@nexo</a>
         </div>
       </div>
-      <form class="contact-form" onsubmit="submitForm(event)">
+      <form class="contact-form" onsubmit="submitTicket(event)">
         <div class="form-row">
-          <input type="text" placeholder="Adınız" required />
-          <input type="email" placeholder="E-posta" required />
+          <input type="text" id="ticketName" placeholder="Adınız" required />
+          <input type="email" id="ticketEmail" placeholder="E-posta" required />
         </div>
-        <textarea placeholder="Mesajınız..." rows="5" required></textarea>
+        <input type="text" id="ticketSubject" placeholder="Konu" required style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;color:#fff;font-size:14px;outline:none;transition:border-color .2s;width:100%"/>
+        <textarea id="ticketMessage" placeholder="Mesajınız..." rows="5" required></textarea>
         <button type="submit" class="btn-primary">Gönder</button>
       </form>
     </div>
@@ -420,6 +378,7 @@
         <div class="auth-user-name" id="authUserName"></div>
         <div class="auth-user-email" id="authUserEmail"></div>
         <a href="#" onclick="closeAuthModal();loadMyOrders();return false;" class="btn-primary full-width" style="margin-top:20px;text-align:center;display:flex;justify-content:center">Siparislerim</a>
+        <a href="#" onclick="closeAuthModal();loadMyTickets();return false;" class="btn-outline full-width" style="margin-top:10px;text-align:center;display:flex;justify-content:center">Taleplerim</a>
         <button class="auth-logout-btn" id="logoutUserBtn">Cikis Yap</button>
       </div>
     </div>
@@ -438,8 +397,21 @@
   </div>
   <div class="my-orders-overlay" id="myOrdersOverlay" onclick="closeMyOrders()"></div>
 
+  <!-- MY TICKETS MODAL -->
+  <div class="my-orders-modal" id="myTicketsModal" style="z-index:263">
+    <div class="my-orders-inner">
+      <div class="my-orders-header">
+        <h2>Taleplerim</h2>
+        <button onclick="closeMyTickets()">✕</button>
+      </div>
+      <div class="my-orders-content" id="myTicketsContent"></div>
+    </div>
+  </div>
+  <div class="my-orders-overlay" id="myTicketsOverlay" onclick="closeMyTickets()" style="z-index:262"></div>
+
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
+  </div>
 
   <script src="app.js"></script>
 </body>

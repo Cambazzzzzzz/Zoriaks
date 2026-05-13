@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Urun — NEXO</title>
+  <link rel="icon" type="image/png" href="/nexologo1.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0a0a;color:#fff;font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+    a{color:inherit;text-decoration:none}
+    button{cursor:pointer;border:none;font-family:inherit}
+    .header{padding:16px 32px;border-bottom:1px solid #1f1f1f;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(10,10,10,.95);backdrop-filter:blur(10px);z-index:10}
+    .header-logo{font-size:20px;font-weight:900;letter-spacing:.15em;display:flex;align-items:center;gap:10px}
+    .header-logo img{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.2);padding:3px;background:rgba(255,255,255,.05)}
+    .header-back{font-size:13px;color:#666;display:flex;align-items:center;gap:6px;transition:color .2s}
+    .header-back:hover{color:#fff}
+    .container{max-width:1100px;margin:0 auto;padding:48px 24px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+    /* Gallery */
+    .gallery{position:sticky;top:80px}
+    .gallery-main{aspect-ratio:3/4;background:#111;border-radius:16px;overflow:hidden;position:relative}
+    .gallery-main img{width:100%;height:100%;object-fit:cover;transition:transform .25s;cursor:zoom-in;display:block}
+    .gallery-main.zoomed img{transform:scale(2.5);cursor:zoom-out}
+    .gallery-thumbs{display:flex;gap:8px;margin-top:12px;overflow-x:auto;scrollbar-width:none}
+    .gallery-thumbs::-webkit-scrollbar{display:none}
+    .gallery-thumb{width:64px;height:64px;border-radius:8px;overflow:hidden;border:2px solid transparent;cursor:pointer;flex-shrink:0;transition:border-color .2s}
+    .gallery-thumb.active{border-color:#fff}
+    .gallery-thumb img{width:100%;height:100%;object-fit:cover}
+    .gallery-arrows{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:12px;pointer-events:none}
+    .gallery-arrow{width:36px;height:36px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;pointer-events:all;cursor:pointer;transition:all .2s;backdrop-filter:blur(4px)}
+    .gallery-arrow:hover{background:rgba(255,255,255,.15)}
+    /* Details */
+    .product-cat{font-size:11px;letter-spacing:.2em;color:#666;text-transform:uppercase;margin-bottom:12px}
+    .product-name{font-size:32px;font-weight:900;letter-spacing:-.01em;margin-bottom:12px;line-height:1.1}
+    .product-price{font-size:28px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+    .price-old{font-size:18px;color:#666;text-decoration:line-through;font-weight:400}
+    .product-desc{font-size:15px;color:#888;line-height:1.7;margin-bottom:28px}
+    .stock-badge{display:inline-block;padding:5px 12px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:20px}
+    .stock-out{background:rgba(255,59,59,.15);color:#ff3b3b;border:1px solid rgba(255,59,59,.3)}
+    .stock-low{background:rgba(255,165,0,.15);color:#ffa500;border:1px solid rgba(255,165,0,.3)}
+    .size-label{font-size:12px;letter-spacing:.1em;font-weight:600;text-transform:uppercase;margin-bottom:12px;color:#888}
+    .size-options{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+    .size-btn{width:48px;height:48px;border:1px solid #1f1f1f;border-radius:8px;font-size:13px;font-weight:600;color:#fff;background:transparent;transition:all .2s}
+    .size-btn:hover,.size-btn.active{border-color:#fff;background:#fff;color:#000}
+    .add-btn{width:100%;padding:16px;background:#fff;color:#000;font-weight:800;font-size:14px;letter-spacing:.08em;text-transform:uppercase;border-radius:8px;transition:opacity .2s;margin-bottom:12px}
+    .add-btn:hover{opacity:.85}
+    .add-btn:disabled{opacity:.4;cursor:not-allowed}
+    .share-btn{width:100%;padding:14px;background:transparent;color:#666;font-size:13px;border:1px solid #1f1f1f;border-radius:8px;transition:all .2s}
+    .share-btn:hover{border-color:#fff;color:#fff}
+    .toast-mini{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#fff;color:#000;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:400;transition:transform .3s;white-space:nowrap}
+    .toast-mini.show{transform:translateX(-50%) translateY(0)}
+    .not-found{text-align:center;padding:80px 24px}
+    .not-found h2{font-size:24px;font-weight:800;margin-bottom:12px}
+    .not-found p{color:#666;margin-bottom:24px}
+    .back-btn{display:inline-flex;padding:12px 28px;background:#fff;color:#000;font-weight:700;font-size:13px;border-radius:8px}
+    @media(max-width:768px){.container{grid-template-columns:1fr;gap:32px;padding:24px 16px}.gallery{position:static}.product-name{font-size:24px}}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="/" class="header-logo">
+      <img src="/nexologo1.png" alt="NEXO"/>
+      NEXO
+    </a>
+    <a href="/" class="header-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Alışverişe Dön
+    </a>
+  </header>
+
+  <div class="container" id="productContainer">
+    <div style="grid-column:span 2;text-align:center;padding:60px;color:#666">Yukleniyor...</div>
+  </div>
+
+  <div class="toast-mini" id="toast"></div>
+
+  <script>
+    const slug = location.pathname.replace('/urun/', '').replace(/\//g, '');
+    let product = null;
+    let currentImg = 0;
+    let selectedSize = null;
+    let cart = JSON.parse(localStorage.getItem('nexo_cart') || '[]');
+
+    async function loadProduct() {
+      try {
+        const r = await fetch('/api/products/' + slug);
+        const d = await r.json();
+        if (!d.success) { showNotFound(); return; }
+        product = d.product;
+        document.title = product.name + ' — NEXO';
+        renderProduct();
+      } catch(e) { showNotFound(); }
+    }
+
+    function renderProduct() {
+      const p = product;
+      const images = p.images && p.images.length ? p.images : [];
+      const thumbs = images.length > 1 ? images.map((img, i) => '<div class="gallery-thumb' + (i===0?' active':'') + '" onclick="setImg(' + i + ')"><img src="' + img + '" alt=""/></div>').join('') : '';
+      const arrows = images.length > 1 ? '<div class="gallery-arrows"><button type="button" class="gallery-arrow" onclick="event.stopPropagation();prevImg()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button><button type="button" class="gallery-arrow" onclick="event.stopPropagation();nextImg()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button></div>' : '';
+      const oldPrice = p.old_price ? '<span class="price-old">\u20ba' + Number(p.old_price).toLocaleString('tr-TR') + '</span>' : '';
+      const stockBadge = p.stock_status === 'out_of_stock' ? '<div class="stock-badge stock-out">Stokta Yok</div>' : (p.stock !== null && !p.stock_unlimited && p.stock <= 5 && p.stock > 0 ? '<div class="stock-badge stock-low">Son ' + p.stock + ' Urun</div>' : '');
+      const sizes = (p.sizes||[]).map(s => '<button class="size-btn" onclick="selectSize(this,\'' + s + '\')">' + s + '</button>').join('');
+      const isOut = p.stock_status === 'out_of_stock';
+
+      const mainImgBlock = images[0]
+        ? '<img id="mainImg" src="' + images[0] + '" alt="' + esc(p.name) + '" onclick="toggleZoom(event)"/>'
+        : '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:80px;font-weight:900;color:rgba(255,255,255,.05)">N</div>';
+
+      document.getElementById('productContainer').innerHTML =
+        '<div class="gallery">'
+        + '<div class="gallery-main" id="galleryWrap">' + mainImgBlock + arrows + '</div>'
+        + (thumbs ? '<div class="gallery-thumbs">' + thumbs + '</div>' : '')
+        + '</div>'
+        + '<div class="product-details">'
+        + '<div class="product-cat">' + esc(p.category) + '</div>'
+        + '<div class="product-name">' + esc(p.name) + '</div>'
+        + '<div class="product-price">\u20ba' + Number(p.price).toLocaleString('tr-TR') + oldPrice + '</div>'
+        + stockBadge
+        + (p.description ? '<div class="product-desc">' + esc(p.description) + '</div>' : '')
+        + (sizes ? '<div class="size-label">Beden Sec</div><div class="size-options">' + sizes + '</div>' : '')
+        + '<button class="add-btn" id="addBtn" onclick="addToCart()" ' + (isOut?'disabled':'') + '>' + (isOut?'Stokta Yok':'Sepete Ekle') + '</button>'
+        + '<button class="share-btn" onclick="shareProduct()">Urunu Paylas</button>'
+        + '</div>';
+    }
+
+    function setImg(i) {
+      currentImg = i;
+      const imgs = product.images || [];
+      const mainImg = document.getElementById('mainImg');
+      if (mainImg) mainImg.src = imgs[i];
+      document.querySelectorAll('.gallery-thumb').forEach((t, idx) => t.classList.toggle('active', idx === i));
+      const wrap = document.getElementById('galleryWrap');
+      if (wrap) wrap.classList.remove('zoomed');
+    }
+    function prevImg() { setImg((currentImg - 1 + (product.images||[]).length) % (product.images||[]).length); }
+    function nextImg() { setImg((currentImg + 1) % (product.images||[]).length); }
+    function toggleZoom(e) {
+      if (e) { e.stopPropagation(); e.preventDefault(); }
+      const wrap = document.getElementById('galleryWrap');
+      if (wrap) wrap.classList.toggle('zoomed');
+    }
+    function selectSize(btn, size) {
+      document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedSize = size;
+    }
+    function addToCart() {
+      if (!selectedSize && product.sizes && product.sizes.length) { showToast('Lutfen beden secin'); return; }
+      const size = selectedSize || 'STD';
+      const existing = cart.find(c => c.id === product.id && c.size === size);
+      if (existing) existing.qty = (existing.qty||1) + 1;
+      else cart.push({ id: product.id, name: product.name, price: product.price, image: (product.images||[])[0]||'', size, qty: 1 });
+      localStorage.setItem('nexo_cart', JSON.stringify(cart));
+      showToast(product.name + ' sepete eklendi!');
+    }
+    function shareProduct() {
+      const url = location.href;
+      navigator.clipboard.writeText(url).then(() => showToast('Link kopyalandi!')).catch(() => prompt('Link:', url));
+    }
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+    function showNotFound() {
+      document.getElementById('productContainer').innerHTML = '<div class="not-found" style="grid-column:span 2"><h2>Urun Bulunamadi</h2><p>Bu urun mevcut degil.</p><a href="/" class="back-btn">Ana Sayfaya Don</a></div>';
+    }
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // Keyboard nav
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft') prevImg();
+      if (e.key === 'ArrowRight') nextImg();
+    });
+
+    loadProduct();
+  </script>
+</body>
+</html>

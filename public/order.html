@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Siparis Detayi — NEXO</title>
+  <link rel="icon" type="image/png" href="/nexologo1.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0a0a;color:#fff;font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+    a{color:inherit;text-decoration:none}
+    .header{padding:20px 32px;border-bottom:1px solid #1f1f1f;display:flex;align-items:center;justify-content:space-between}
+    .header-logo{font-size:20px;font-weight:900;letter-spacing:.15em;display:flex;align-items:center;gap:10px}
+    .header-logo img{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.2);padding:3px;background:rgba(255,255,255,.05)}
+    .container{max-width:700px;margin:0 auto;padding:40px 24px}
+    .order-card{background:#111;border:1px solid #1f1f1f;border-radius:16px;overflow:hidden;margin-bottom:24px}
+    .order-header{padding:24px 28px;border-bottom:1px solid #1f1f1f;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+    .order-id{font-size:22px;font-weight:800;letter-spacing:.05em}
+    .order-date{font-size:13px;color:#666;margin-top:4px}
+    .status{display:inline-block;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.05em}
+    .status-pending{background:rgba(255,200,0,.15);color:#ffc800}
+    .status-processing{background:rgba(0,150,255,.15);color:#0096ff}
+    .status-shipped{background:rgba(150,0,255,.15);color:#9600ff}
+    .status-delivered{background:rgba(0,200,100,.15);color:#00c864}
+    .status-cancelled{background:rgba(255,68,68,.15);color:#ff4444}
+    .tracking-bar{padding:16px 28px;background:rgba(74,222,128,.05);border-bottom:1px solid #1f1f1f;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .tracking-info{font-size:13px;color:#4ade80}
+    .track-btn{padding:8px 20px;background:#4ade80;color:#000;font-weight:700;font-size:12px;border-radius:6px;border:none;cursor:pointer;text-decoration:none}
+    .section{padding:24px 28px;border-bottom:1px solid #1f1f1f}
+    .section:last-child{border-bottom:none}
+    .section-title{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#666;font-weight:600;margin-bottom:16px}
+    .items-list{display:flex;flex-direction:column;gap:12px}
+    .item{display:flex;align-items:center;gap:14px}
+    .item-img{width:56px;height:56px;border-radius:8px;background:#1a1a1a;overflow:hidden;flex-shrink:0}
+    .item-img img{width:100%;height:100%;object-fit:cover}
+    .item-info{flex:1}
+    .item-name{font-size:14px;font-weight:600;margin-bottom:2px}
+    .item-meta{font-size:12px;color:#666}
+    .item-price{font-size:14px;font-weight:700}
+    .address-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .addr-field label{font-size:11px;color:#666;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px}
+    .addr-field span{font-size:14px}
+    .totals{display:flex;flex-direction:column;gap:8px}
+    .total-line{display:flex;justify-content:space-between;font-size:14px;color:#888}
+    .total-line.grand{font-size:18px;font-weight:800;color:#fff;padding-top:12px;border-top:1px solid #1f1f1f;margin-top:4px}
+    .share-section{background:#111;border:1px solid #1f1f1f;border-radius:16px;padding:24px 28px}
+    .share-title{font-size:14px;font-weight:700;margin-bottom:12px}
+    .share-url-wrap{display:flex;gap:8px}
+    .share-url{flex:1;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:8px;padding:12px 14px;color:#888;font-size:13px;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .copy-btn{padding:12px 20px;background:#fff;color:#000;font-weight:700;font-size:13px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap;transition:opacity .2s}
+    .copy-btn:hover{opacity:.85}
+    .copy-btn.copied{background:#4ade80}
+    .not-found{text-align:center;padding:80px 24px}
+    .not-found h2{font-size:24px;font-weight:800;margin-bottom:12px}
+    .not-found p{color:#666;margin-bottom:24px}
+    .back-btn{display:inline-flex;padding:12px 28px;background:#fff;color:#000;font-weight:700;font-size:13px;border-radius:8px}
+    @media(max-width:600px){.address-grid{grid-template-columns:1fr}.order-header{flex-direction:column;align-items:flex-start}}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="/" class="header-logo">
+      <img src="/nexologo1.png" alt="NEXO"/>
+      NEXO
+    </a>
+    <a href="/" style="font-size:13px;color:#666">Ana Sayfa</a>
+  </header>
+
+  <div class="container" id="orderContainer" style="max-height:calc(100vh - 200px);overflow-y:auto">
+    <div style="text-align:center;padding:60px;color:#666">Yukleniyor...</div>
+  </div>
+
+  <script>
+    const slug = location.pathname.replace('/siparis/', '').replace(/\//g, '');
+    const statusLabels = { pending:'Bekliyor', processing:'Isleniyor', shipped:'Kargoda', delivered:'Teslim Edildi', cancelled:'Iptal' };
+
+    async function loadOrder() {
+      try {
+        const r = await fetch('/api/order-by-slug/' + slug);
+        const d = await r.json();
+        if (!d.success) { showNotFound(); return; }
+        renderOrder(d.order);
+      } catch(e) { showNotFound(); }
+    }
+
+    function renderOrder(o) {
+      const shareUrl = location.origin + '/siparis/' + (o.custom_slug || o.id);
+      const trackingHtml = o.tracking_number
+        ? '<div class="tracking-bar"><div class="tracking-info">' + (o.shipping_company||'Kargo') + ' — ' + o.tracking_number + '</div>'
+          + (o.tracking_url ? '<a href="' + o.tracking_url + '" target="_blank" class="track-btn">Kargo Takip</a>' : '') + '</div>'
+        : '';
+
+      const itemsHtml = (o.items||[]).map(item =>
+        '<div class="item">'
+        + '<div class="item-img">' + (item.image ? '<img src="' + item.image + '" alt=""/>' : '') + '</div>'
+        + '<div class="item-info"><div class="item-name">' + esc(item.name||'') + '</div><div class="item-meta">Beden: ' + esc(item.size||'') + ' &times; ' + (item.qty||1) + '</div></div>'
+        + '<div class="item-price">\u20ba' + Number(item.price*(item.qty||1)).toLocaleString('tr-TR') + '</div>'
+        + '</div>'
+      ).join('');
+
+      const subtotal = (o.items||[]).reduce((s,c) => s + c.price*(c.qty||1), 0);
+      const discount = parseFloat(o.discount_amount||0);
+      const shipping = parseFloat(o.shipping_cost||0);
+
+      document.getElementById('orderContainer').innerHTML =
+        '<div class="order-card">'
+        + '<div class="order-header">'
+        + '<div><div class="order-id">#' + o.id + '</div><div class="order-date">' + new Date(o.created_at).toLocaleString('tr-TR') + '</div></div>'
+        + '<span class="status status-' + o.status + '">' + (statusLabels[o.status]||o.status) + '</span>'
+        + '</div>'
+        + trackingHtml
+        + '<div class="section"><div class="section-title">Urunler</div><div class="items-list">' + itemsHtml + '</div></div>'
+        + '<div class="section"><div class="section-title">Teslimat Adresi</div><div class="address-grid">'
+        + '<div class="addr-field"><label>Ad Soyad</label><span>' + esc(o.customer_name||'') + '</span></div>'
+        + '<div class="addr-field"><label>Telefon</label><span>' + esc(o.customer_phone||'') + '</span></div>'
+        + '<div class="addr-field"><label>Sehir / Ilce</label><span>' + esc((o.city||'') + (o.district?' / '+o.district:'')) + '</span></div>'
+        + '<div class="addr-field"><label>Adres</label><span>' + esc(o.address||'') + '</span></div>'
+        + '</div></div>'
+        + '<div class="section"><div class="section-title">Ozet</div><div class="totals">'
+        + '<div class="total-line"><span>Ara Toplam</span><span>\u20ba' + subtotal.toLocaleString('tr-TR') + '</span></div>'
+        + (discount > 0 ? '<div class="total-line"><span>Indirim</span><span style="color:#4ade80">-\u20ba' + discount.toLocaleString('tr-TR') + '</span></div>' : '')
+        + '<div class="total-line"><span>Kargo</span><span>' + (shipping===0?'Ucretsiz':'\u20ba'+shipping.toLocaleString('tr-TR')) + '</span></div>'
+        + '<div class="total-line grand"><span>Toplam</span><span>\u20ba' + Number(o.total).toLocaleString('tr-TR') + '</span></div>'
+        + '</div></div>'
+        + '</div>'
+        + '<div class="share-section">'
+        + '<div class="share-title">Siparisi Paylas</div>'
+        + '<div class="share-url-wrap">'
+        + '<div class="share-url" id="shareUrl">' + shareUrl + '</div>'
+        + '<button class="copy-btn" id="copyBtn" onclick="copyUrl(\'' + shareUrl + '\')">Kopyala</button>'
+        + '</div></div>';
+    }
+
+    function copyUrl(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'Kopyalandi!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Kopyala'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+
+    function showNotFound() {
+      document.getElementById('orderContainer').innerHTML =
+        '<div class="not-found"><h2>Siparis Bulunamadi</h2><p>Bu siparis mevcut degil veya erisim izniniz yok.</p><a href="/" class="back-btn">Ana Sayfaya Don</a></div>';
+    }
+
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    loadOrder();
+  </script>
+</body>
+</html>

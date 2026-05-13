@@ -32,6 +32,7 @@ function initAdmin() {
   loadOrders();
   loadUsers();
   loadDiscounts();
+  loadTickets();
   loadSettings();
   setupProductForm();
   setupCollectionForm();
@@ -80,14 +81,22 @@ async function loadCollections() {
 
 function renderCollectionsTable() {
   const tbody = document.getElementById('collectionsTableBody');
-  if (!collectionsCache.length) { tbody.innerHTML = '<tr><td colspan="5" class="table-empty">Koleksiyon yok</td></tr>'; return; }
-  tbody.innerHTML = collectionsCache.map(c => '<tr>'
-    + '<td><code style="font-size:11px;color:#666">' + c.id + '</code></td>'
-    + '<td><strong>' + esc(c.name) + '</strong></td>'
-    + '<td><code style="font-size:12px;color:#888">' + esc(c.slug) + '</code></td>'
-    + '<td style="color:#666">' + esc(c.description || '') + '</td>'
-    + '<td><div class="btn-actions"><button class="btn-edit" onclick="editCollection(\'' + c.id + '\')">Duzenle</button><button class="btn-delete" onclick="deleteCollection(\'' + c.id + '\',\'' + esc(c.name) + '\')">Sil</button></div></td>'
-    + '</tr>').join('');
+  if (!collectionsCache.length) { tbody.innerHTML = '<tr><td colspan="7" class="table-empty">Koleksiyon yok</td></tr>'; return; }
+  tbody.innerHTML = collectionsCache.map(c => {
+    const layoutLabel = c.card_layout === 'large' ? 'Genis' : 'Normal';
+    return '<tr>'
+      + '<td>' + (c.sort_order != null ? c.sort_order : 0) + '</td>'
+      + '<td><code style="font-size:11px;color:#666">' + esc(c.id) + '</code></td>'
+      + '<td><strong>' + esc(c.name) + '</strong></td>'
+      + '<td><code style="font-size:12px;color:#888">' + esc(c.slug) + '</code></td>'
+      + '<td>' + layoutLabel + '</td>'
+      + '<td style="color:#666;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(c.description || '') + '</td>'
+      + '<td><div class="btn-actions">'
+      + '<a class="btn-edit" href="/koleksiyon/' + encodeURIComponent(c.slug || c.id) + '" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;margin-right:4px">Site</a>'
+      + '<button class="btn-edit" onclick="editCollection(\'' + c.id + '\')">Duzenle</button>'
+      + '<button class="btn-delete" onclick="deleteCollection(\'' + c.id + '\',\'' + esc(c.name) + '\')">Sil</button></div></td>'
+      + '</tr>';
+  }).join('');
 }
 
 function updateCollectionSelect() {
@@ -100,6 +109,8 @@ document.getElementById('addCollectionBtn').addEventListener('click', () => {
   document.getElementById('collectionModalTitle').textContent = 'Yeni Koleksiyon';
   document.getElementById('collectionId').value = '';
   document.getElementById('collectionForm').reset();
+  document.getElementById('c-sort').value = '0';
+  document.getElementById('c-layout').value = 'normal';
   openCollectionModal();
 });
 
@@ -110,6 +121,12 @@ function editCollection(id) {
   document.getElementById('collectionId').value = c.id;
   document.getElementById('c-name').value = c.name;
   document.getElementById('c-desc').value = c.description || '';
+  document.getElementById('c-slug').value = c.slug || '';
+  document.getElementById('c-sort').value = c.sort_order != null ? c.sort_order : 0;
+  document.getElementById('c-layout').value = c.card_layout === 'large' ? 'large' : 'normal';
+  document.getElementById('c-overlay').value = c.overlay_text || '';
+  document.getElementById('c-image').value = c.image_url || '';
+  document.getElementById('c-gradient').value = c.gradient || '';
   openCollectionModal();
 }
 
@@ -117,7 +134,16 @@ function setupCollectionForm() {
   document.getElementById('collectionForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('collectionId').value;
-    const body = { name: document.getElementById('c-name').value, description: document.getElementById('c-desc').value };
+    const body = {
+      name: document.getElementById('c-name').value,
+      description: document.getElementById('c-desc').value,
+      slug: document.getElementById('c-slug').value.trim(),
+      sort_order: document.getElementById('c-sort').value,
+      card_layout: document.getElementById('c-layout').value,
+      overlay_text: document.getElementById('c-overlay').value.trim(),
+      image_url: document.getElementById('c-image').value.trim(),
+      gradient: document.getElementById('c-gradient').value.trim(),
+    };
     try {
       const url = id ? '/api/admin/collections/' + id : '/api/admin/collections';
       const method = id ? 'PUT' : 'POST';
@@ -144,24 +170,108 @@ function closeCollectionModal() { document.getElementById('collectionModal').cla
 
 // ── Products ──────────────────────────────────────────────────────
 let allProductsCache = [];
+let seasonTemplatesCache = [];
 
 async function loadProducts(search) {
   try {
-    const url = search ? '/api/products?search=' + encodeURIComponent(search) : '/api/products';
+    const url = search ? '/api/admin/products?search=' + encodeURIComponent(search) : '/api/admin/products';
     const r = await fetch(url);
     const d = await r.json();
     allProductsCache = d.products || [];
     renderProductsTable(allProductsCache);
   } catch(e) {}
+  await loadSeasonTemplates();
+}
+
+async function loadSeasonTemplates() {
+  const mount = document.getElementById('seasonTemplatesMount');
+  if (!mount) return;
+  try {
+    const r = await fetch('/api/admin/season-templates');
+    const d = await r.json();
+    if (!d.success) {
+      mount.innerHTML = '<p style="color:#888">Sablonlar yuklenemedi.</p>';
+      return;
+    }
+    seasonTemplatesCache = d.templates || [];
+    renderSeasonTemplates();
+  } catch (e) {
+    mount.innerHTML = '<p style="color:#888">Sablonlar yuklenemedi.</p>';
+  }
+}
+
+function renderSeasonTemplates() {
+  const mount = document.getElementById('seasonTemplatesMount');
+  if (!mount) return;
+  const anyActive = seasonTemplatesCache.some(function (t) { return t.is_active; });
+  let radios = '<div class="form-group"><label>Sitede hangi sablon aktif?</label><div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px">';
+  radios += '<label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="radio" name="nexo-active-tpl" value=""' + (!anyActive ? ' checked' : '') + '/> Hicbiri (tum aktif urunler)</label>';
+  seasonTemplatesCache.forEach(function (t) {
+    radios += '<label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="radio" name="nexo-active-tpl" value="' + esc(t.id) + '"' + (t.is_active ? ' checked' : '') + '/> ' + esc(t.name) + '</label>';
+  });
+  radios += '</div><button type="button" class="btn-save" style="margin-top:10px" onclick="saveSeasonActiveTemplate()">Aktif sablonu kaydet</button></div>';
+
+  const cards = seasonTemplatesCache.map(function (t) {
+    const checks = (allProductsCache || []).map(function (p) {
+      const checked = (t.product_ids || []).indexOf(p.id) !== -1 ? ' checked' : '';
+      return '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;font-weight:400"><input type="checkbox" class="tpl-chk-' + t.id + '" value="' + esc(p.id) + '"' + checked + '/> ' + esc(p.name) + '</label>';
+    }).join('');
+    return '<div style="border:1px solid #2a2a2a;border-radius:8px;padding:16px;margin-top:12px;background:#0f0f0f">'
+      + '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px">'
+      + '<strong>' + esc(t.name) + '</strong><code style="font-size:11px;color:#666">' + esc(t.code) + '</code></div>'
+      + '<div class="form-group"><label>Sablon adi</label><div style="display:flex;gap:8px"><input type="text" id="tpl-rename-' + t.id + '" value="' + esc(t.name) + '" style="flex:1"/>'
+      + '<button type="button" class="btn-edit" onclick="saveSeasonTemplateName(\'' + t.id.replace(/'/g, "\\'") + '\')">Ismi kaydet</button></div></div>'
+      + '<div class="form-group"><label>Bu sablona ait urunler</label>'
+      + '<div style="max-height:220px;overflow:auto;border:1px solid #2a2a2a;border-radius:6px;padding:10px">' + (checks || '<span style="color:#666">Once urunleri yukleyin.</span>') + '</div></div>'
+      + '<button type="button" class="btn-save" onclick="saveSeasonTemplateProducts(\'' + t.id.replace(/'/g, "\\'") + '\')">Urun listesini kaydet</button>'
+      + '</div>';
+  }).join('');
+  mount.innerHTML = radios + cards;
+}
+
+async function saveSeasonActiveTemplate() {
+  const el = document.querySelector('input[name="nexo-active-tpl"]:checked');
+  const template_id = el && el.value ? el.value : null;
+  try {
+    const r = await fetch('/api/admin/season-templates/active', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ template_id: template_id }) });
+    const d = await r.json();
+    showToast(d.success ? (d.message || 'Kaydedildi') : (d.message || 'Hata'), !d.success);
+    if (d.success) await loadSeasonTemplates();
+  } catch (e) { showToast('Sunucu hatasi', true); }
+}
+
+async function saveSeasonTemplateName(id) {
+  const inp = document.getElementById('tpl-rename-' + id);
+  const name = inp ? inp.value : '';
+  try {
+    const r = await fetch('/api/admin/season-templates/' + encodeURIComponent(id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name }) });
+    const d = await r.json();
+    showToast(d.success ? 'Isim guncellendi' : (d.message || 'Hata'), !d.success);
+    if (d.success) await loadSeasonTemplates();
+  } catch (e) { showToast('Sunucu hatasi', true); }
+}
+
+async function saveSeasonTemplateProducts(id) {
+  const boxes = document.querySelectorAll('.tpl-chk-' + id);
+  const product_ids = [];
+  boxes.forEach(function (b) { if (b.checked) product_ids.push(b.value); });
+  try {
+    const r = await fetch('/api/admin/season-templates/' + encodeURIComponent(id) + '/products', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_ids: product_ids }) });
+    const d = await r.json();
+    showToast(d.success ? (d.message || 'Kaydedildi') : (d.message || 'Hata'), !d.success);
+    if (d.success) await loadSeasonTemplates();
+  } catch (e) { showToast('Sunucu hatasi', true); }
 }
 
 function renderProductsTable(products) {
   const tbody = document.getElementById('productsTableBody');
-  if (!products || !products.length) { tbody.innerHTML = '<tr><td colspan="8" class="table-empty">Urun bulunamadi</td></tr>'; return; }
+  if (!products || !products.length) { tbody.innerHTML = '<tr><td colspan="9" class="table-empty">Urun bulunamadi</td></tr>'; return; }
   tbody.innerHTML = products.map(p => {
     const stockLabel = p.stock_unlimited ? 'Sinirsiz' : (p.stock_status === 'out_of_stock' ? '<span style="color:#ff4444">Stokta Yok</span>' : (p.stock !== null ? p.stock : '-'));
     const colName = collectionsCache.find(c => c.id === p.collection);
     const thumb = p.images && p.images[0] ? '<img src="' + p.images[0] + '" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid #2a2a2a">' : '<div style="width:40px;height:40px;background:#1a1a1a;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#444">N</div>';
+    const isActive = p.active !== false;
+    const vitrinBtn = '<button type="button" class="' + (isActive ? 'btn-edit' : 'btn-delete') + '" onclick="toggleProductActive(\'' + p.id + '\',' + (isActive ? 'false' : 'true') + ')">' + (isActive ? 'Aktif' : 'Pasif') + '</button>';
     return '<tr>'
       + '<td>' + thumb + '</td>'
       + '<td><code style="font-size:11px;color:#666">' + p.id + '</code></td>'
@@ -170,9 +280,23 @@ function renderProductsTable(products) {
       + '<td>' + esc(colName ? colName.name : p.collection) + '</td>'
       + '<td>₺' + Number(p.price).toLocaleString('tr-TR') + '</td>'
       + '<td>' + stockLabel + '</td>'
+      + '<td>' + vitrinBtn + '</td>'
       + '<td><div class="btn-actions"><button class="btn-edit" onclick="editProduct(\'' + p.id + '\')">Duzenle</button><button class="btn-delete" onclick="deleteProduct(\'' + p.id + '\',\'' + esc(p.name) + '\')">Sil</button></div></td>'
       + '</tr>';
   }).join('');
+}
+
+async function toggleProductActive(id, makeActive) {
+  try {
+    const r = await fetch('/api/admin/products/' + id + '/active', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active: makeActive === true || makeActive === 'true' })
+    });
+    const d = await r.json();
+    if (d.success) { showToast('Urun durumu guncellendi'); loadProducts(document.getElementById('productSearch') && document.getElementById('productSearch').value); }
+    else showToast(d.message || 'Hata', true);
+  } catch(e) { showToast('Sunucu hatasi', true); }
 }
 
 // ── Product Modal ─────────────────────────────────────────────────
@@ -219,6 +343,7 @@ document.getElementById('addProductBtn').addEventListener('click', () => {
   document.getElementById('p-stock').value = '100';
   document.getElementById('stock-count-wrap').style.display = 'block';
   document.getElementById('stock-type-count').checked = true;
+  document.getElementById('p-active').checked = true;
   selectedFiles = [];
   renderImagePreviews();
   updateCollectionSelect();
@@ -241,7 +366,10 @@ async function editProduct(id) {
     document.getElementById('p-sizes').value = (p.sizes || []).join(',');
     document.getElementById('p-images-url').value = (p.images || []).join(',');
     document.getElementById('p-featured').checked = p.featured;
+    document.getElementById('p-active').checked = p.active !== false;
     document.getElementById('p-keep-images').checked = true;
+    document.getElementById('p-slug').value = p.slug || '';
+    document.getElementById('p-slug-msg').textContent = p.slug ? location.origin + '/urun/' + p.slug : '';
     updateCollectionSelect();
     document.getElementById('p-collection').value = p.collection || 'drop01';
 
@@ -283,6 +411,7 @@ function setupProductForm() {
     formData.append('description', document.getElementById('p-desc').value);
     formData.append('sizes', document.getElementById('p-sizes').value);
     formData.append('featured', document.getElementById('p-featured').checked ? '1' : '0');
+    formData.append('active', document.getElementById('p-active').checked ? '1' : '0');
     formData.append('keep_images', document.getElementById('p-keep-images').checked ? '1' : '0');
 
     // Stock
@@ -394,6 +523,7 @@ async function editOrder(id) {
       + '</div></div></div>'
     ).join('');
 
+    document.getElementById('oe-slug').value = o.custom_slug || '';
     document.getElementById('orderEditModal').classList.add('open');
     document.getElementById('orderEditOverlay').classList.add('open');
   } catch(e) { showToast('Hata', true); }
@@ -457,7 +587,13 @@ async function loadSettings() {
     if (!d.settings) return;
     const s = d.settings;
     document.getElementById('set-site-name').value = s.site_name || '';
+    const st = document.getElementById('set-site-status');
+    if (st) st.value = s.site_status === 'closed' ? 'closed' : 'open';
+    const scm = document.getElementById('set-site-closed-message');
+    if (scm) scm.value = s.site_closed_message || '';
     document.getElementById('set-shipping').value = s.free_shipping_threshold || '';
+    document.getElementById('set-shipping-cost').value = s.shipping_cost || '49.90';
+    document.getElementById('set-free-ship-all').checked = s.free_shipping_all === '1';
     document.getElementById('set-instagram').value = s.instagram || '';
     document.getElementById('set-email').value = s.email || '';
     document.getElementById('set-ann-enabled').value = s.announcement_enabled || '1';
@@ -467,6 +603,9 @@ async function loadSettings() {
     document.getElementById('set-ann-bg-text').value = s.announcement_bg || '#000000';
     document.getElementById('set-ann-color').value = s.announcement_color || '#ffffff';
     document.getElementById('set-ann-color-text').value = s.announcement_color || '#ffffff';
+    document.getElementById('set-marquee-enabled').value = s.marquee_enabled || '1';
+    document.getElementById('set-marquee-speed').value = s.marquee_speed || '20';
+    document.getElementById('set-marquee-line').value = s.marquee_line || '';
   } catch(e) {}
 }
 
@@ -489,11 +628,25 @@ function setupSettingsForms() {
     await saveSettings(settings);
   });
 
+  document.getElementById('marqueeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const settings = {
+      marquee_enabled: document.getElementById('set-marquee-enabled').value,
+      marquee_speed: document.getElementById('set-marquee-speed').value,
+      marquee_line: document.getElementById('set-marquee-line').value,
+    };
+    await saveSettings(settings);
+  });
+
   document.getElementById('siteSettingsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const settings = {
       site_name: document.getElementById('set-site-name').value,
+      site_status: document.getElementById('set-site-status').value,
+      site_closed_message: document.getElementById('set-site-closed-message').value,
       free_shipping_threshold: document.getElementById('set-shipping').value,
+      free_shipping_all: document.getElementById('set-free-ship-all').checked ? '1' : '0',
+      shipping_cost: document.getElementById('set-shipping-cost').value,
       instagram: document.getElementById('set-instagram').value,
       email: document.getElementById('set-email').value,
     };
@@ -659,4 +812,134 @@ async function deleteDiscount(id, code) {
 function closeDiscountModal() {
   document.getElementById('discountModal').classList.remove('open');
   document.getElementById('discountModalOverlay').classList.remove('open');
+}
+
+// ── Tickets ───────────────────────────────────────────────────────
+async function loadTickets(search) {
+  try {
+    const url = search ? '/api/admin/tickets?search=' + encodeURIComponent(search) : '/api/admin/tickets';
+    const r = await fetch(url);
+    const d = await r.json();
+    const tbody = document.getElementById('ticketsTableBody');
+    if (!d.tickets || !d.tickets.length) { tbody.innerHTML = '<tr><td colspan="6" class="table-empty">Talep bulunamadi</td></tr>'; return; }
+    const statusLabels = { open:'Acik', answered:'Cevaplandi', closed:'Kapandi' };
+    const statusClass = { open:'status-pending', answered:'status-delivered', closed:'status-cancelled' };
+    tbody.innerHTML = d.tickets.map(t => '<tr>'
+      + '<td><code style="font-size:11px;color:#666">' + t.id + '</code></td>'
+      + '<td>' + esc(t.user_name||'Misafir') + '<br><small style="color:#666">' + esc(t.user_email||'') + '</small></td>'
+      + '<td>' + esc(t.subject||'') + '</td>'
+      + '<td><span class="status ' + (statusClass[t.status]||'status-pending') + '">' + (statusLabels[t.status]||t.status) + '</span></td>'
+      + '<td style="color:#666;font-size:12px">' + new Date(t.created_at).toLocaleString('tr-TR') + '</td>'
+      + '<td><div class="btn-actions"><button class="btn-edit" onclick="openTicketReply(\'' + t.id + '\')">Goruntule / Cevapla</button><button class="btn-delete" onclick="deleteTicket(\'' + t.id + '\')">Sil</button></div></td>'
+      + '</tr>').join('');
+  } catch(e) {}
+}
+
+async function openTicketReply(id) {
+  try {
+    const r = await fetch('/api/admin/tickets?search=' + id);
+    const d = await r.json();
+    const ticket = d.tickets && d.tickets.find(t => t.id === id);
+    if (!ticket) return;
+    document.getElementById('ticketReplyId').value = ticket.id;
+    document.getElementById('ticketReplyTitle').textContent = '#' + ticket.id + ' — ' + (ticket.subject||'');
+    document.getElementById('ticketReplyContent').innerHTML =
+      '<div style="margin-bottom:8px"><strong>' + esc(ticket.user_name||'Misafir') + '</strong> <span style="color:#666;font-size:12px">' + esc(ticket.user_email||'') + '</span></div>'
+      + '<div>' + esc(ticket.message||'') + '</div>'
+      + (ticket.admin_reply ? '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #1f1f1f"><div style="font-size:11px;color:#4ade80;margin-bottom:4px">MEVCUT CEVAP</div>' + esc(ticket.admin_reply) + '</div>' : '');
+    document.getElementById('ticketReplyText').value = ticket.admin_reply || '';
+    document.getElementById('ticketReplyStatus').value = ticket.status || 'open';
+    document.getElementById('ticketReplyModal').classList.add('open');
+    document.getElementById('ticketReplyOverlay').classList.add('open');
+  } catch(e) {}
+}
+
+async function saveTicketReply() {
+  const id = document.getElementById('ticketReplyId').value;
+  const body = {
+    admin_reply: document.getElementById('ticketReplyText').value,
+    status: document.getElementById('ticketReplyStatus').value,
+  };
+  try {
+    const r = await fetch('/api/admin/tickets/' + encodeURIComponent(id), { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const text = await r.text();
+    let d;
+    try { d = JSON.parse(text); } catch (e) {
+      showToast('Sunucu yaniti gecersiz (' + r.status + ')', true);
+      return;
+    }
+    if (d.success) { showToast('Cevap kaydedildi'); closeTicketReply(); loadTickets(); }
+    else showToast(d.message || 'Hata', true);
+  } catch(e) { showToast('Sunucu hatasi', true); }
+}
+
+async function deleteTicket(id) {
+  if (!confirm('Bu talep silinsin mi?')) return;
+  try {
+    const r = await fetch('/api/admin/tickets/' + id, { method:'DELETE' });
+    const d = await r.json();
+    if (d.success) { showToast('Talep silindi'); loadTickets(); }
+    else showToast(d.message || 'Hata', true);
+  } catch(e) {}
+}
+
+function closeTicketReply() {
+  document.getElementById('ticketReplyModal').classList.remove('open');
+  document.getElementById('ticketReplyOverlay').classList.remove('open');
+}
+
+async function saveOrderSlug() {
+  const id = document.getElementById('orderEditId').value;
+  const slug = document.getElementById('oe-slug').value.trim();
+  const msgEl = document.getElementById('oe-slug-msg');
+  try {
+    const r = await fetch('/api/admin/orders/' + id + '/slug', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ slug }) });
+    const d = await r.json();
+    if (d.success) {
+      msgEl.style.color = '#4ade80';
+      msgEl.textContent = 'Kaydedildi: ' + location.origin + '/siparis/' + d.slug;
+      document.getElementById('oe-slug').value = d.slug;
+    } else {
+      msgEl.style.color = '#ff4444';
+      msgEl.textContent = d.message || 'Hata';
+    }
+  } catch(e) { msgEl.style.color = '#ff4444'; msgEl.textContent = 'Sunucu hatasi'; }
+}
+
+function copyAdminOrderUrl() {
+  const id = document.getElementById('orderEditId').value;
+  const slug = document.getElementById('oe-slug').value.trim() || id;
+  const url = location.origin + '/siparis/' + slug;
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('URL kopyalandi: ' + url);
+  }).catch(() => {
+    prompt('URL:', url);
+  });
+}
+
+async function saveProductSlug() {
+  const id = document.getElementById('productId').value;
+  if (!id) { showToast('Once urunu kaydedin', true); return; }
+  const slug = document.getElementById('p-slug').value.trim();
+  const msgEl = document.getElementById('p-slug-msg');
+  try {
+    const r = await fetch('/api/admin/products/' + id + '/slug', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ slug }) });
+    const d = await r.json();
+    if (d.success) {
+      msgEl.style.color = '#4ade80';
+      msgEl.textContent = location.origin + '/urun/' + d.slug;
+      document.getElementById('p-slug').value = d.slug;
+    } else {
+      msgEl.style.color = '#ff4444';
+      msgEl.textContent = d.message || 'Hata';
+    }
+  } catch(e) { msgEl.style.color = '#ff4444'; msgEl.textContent = 'Sunucu hatasi'; }
+}
+
+function copyProductUrl() {
+  const id = document.getElementById('productId').value;
+  const slug = document.getElementById('p-slug').value.trim() || id;
+  if (!slug) { showToast('Slug yok', true); return; }
+  const url = location.origin + '/urun/' + slug;
+  navigator.clipboard.writeText(url).then(() => showToast('URL kopyalandi!')).catch(() => prompt('URL:', url));
 }

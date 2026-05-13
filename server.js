@@ -29,7 +29,11 @@ async function uploadToCloudinary(buffer, filename) {
 }
 
 // ─── DATABASE ─────────────────────────────────────────────────────
-const VOLUME = process.env.VOLUME_PATH || path.join(__dirname, 'data');
+// Kalici veri: Railway'de Volume ekleyince RAILWAY_VOLUME_MOUNT_PATH otomatik gelir.
+// Ornegin mount /data ise DB: /data/db/nexo.db — deploy'da silinmez.
+const VOLUME = process.env.RAILWAY_VOLUME_MOUNT_PATH
+  || process.env.VOLUME_PATH
+  || path.join(__dirname, 'data');
 const dataDir = path.join(VOLUME, 'db');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
@@ -57,7 +61,8 @@ db.exec(`
     stock_status TEXT DEFAULT 'in_stock',
     featured INTEGER DEFAULT 0,
     collection TEXT DEFAULT 'drop01',
-    created_at TEXT DEFAULT (datetime('now'))
+    created_at TEXT DEFAULT (datetime('now')),
+    active INTEGER DEFAULT 1
   );
 
   CREATE TABLE IF NOT EXISTS collections (
@@ -65,6 +70,11 @@ db.exec(`
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
     description TEXT,
+    image_url TEXT,
+    overlay_text TEXT,
+    gradient TEXT,
+    card_layout TEXT DEFAULT 'normal',
+    sort_order INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
   );
 
@@ -126,6 +136,19 @@ db.exec(`
     free_threshold REAL DEFAULT 0,
     active INTEGER DEFAULT 1
   );
+
+  CREATE TABLE IF NOT EXISTS tickets (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    user_name TEXT,
+    user_email TEXT,
+    subject TEXT NOT NULL,
+    message TEXT NOT NULL,
+    status TEXT DEFAULT 'open',
+    admin_reply TEXT,
+    admin_reply_at TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
 `);
 
 // Migrate: add new columns if they don't exist
@@ -145,11 +168,20 @@ try { db.exec("ALTER TABLE orders ADD COLUMN city TEXT"); } catch {}
 try { db.exec("ALTER TABLE orders ADD COLUMN district TEXT"); } catch {}
 try { db.exec("ALTER TABLE orders ADD COLUMN zip_code TEXT"); } catch {}
 try { db.exec("ALTER TABLE orders ADD COLUMN address_detail TEXT"); } catch {}
+try { db.exec("ALTER TABLE products ADD COLUMN slug TEXT"); } catch {}
+try { db.exec("ALTER TABLE products ADD COLUMN active INTEGER DEFAULT 1"); } catch {}
+try { db.prepare("UPDATE products SET active = 1 WHERE active IS NULL").run(); } catch {}
+try { db.exec("ALTER TABLE orders ADD COLUMN custom_slug TEXT"); } catch {}
 try { db.exec("ALTER TABLE orders ADD COLUMN card_last4 TEXT"); } catch {}
 try { db.exec("ALTER TABLE orders ADD COLUMN payment_status TEXT DEFAULT 'pending'"); } catch {}
 try { db.exec("ALTER TABLE orders ADD COLUMN tracking_number TEXT"); } catch {}
 try { db.exec("ALTER TABLE orders ADD COLUMN tracking_url TEXT"); } catch {}
 try { db.exec("ALTER TABLE orders ADD COLUMN shipping_company TEXT"); } catch {}
+try { db.exec('ALTER TABLE collections ADD COLUMN image_url TEXT'); } catch {}
+try { db.exec('ALTER TABLE collections ADD COLUMN overlay_text TEXT'); } catch {}
+try { db.exec('ALTER TABLE collections ADD COLUMN gradient TEXT'); } catch {}
+try { db.exec("ALTER TABLE collections ADD COLUMN card_layout TEXT DEFAULT 'normal'"); } catch {}
+try { db.exec('ALTER TABLE collections ADD COLUMN sort_order INTEGER DEFAULT 0'); } catch {}
 
 // Seed admin — her zaman şifreyi güncelle
 const adminExists = db.prepare('SELECT id FROM admin WHERE id = 1').get();
@@ -165,31 +197,89 @@ if (!adminExists) {
 
 // Seed default collections
 const defaultCollections = [
-  { id: 'drop01', name: 'Drop 01', slug: 'drop01', description: 'Ilk koleksiyon' },
-  { id: 'essentials', name: 'Essentials', slug: 'essentials', description: 'Temel parcalar' },
-  { id: 'limited', name: 'Limited', slug: 'limited', description: 'Sinirli uretim' },
+  { id: 'drop01', name: 'Drop 01', slug: 'drop01', description: 'Ilk koleksiyon', overlay_text: 'DROP 01', gradient: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)', card_layout: 'large', sort_order: 0 },
+  { id: 'essentials', name: 'Essentials', slug: 'essentials', description: 'Temel parcalar', overlay_text: 'ESS', gradient: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)', card_layout: 'normal', sort_order: 1 },
+  { id: 'limited', name: 'Limited', slug: 'limited', description: 'Sinirli uretim', overlay_text: 'LTD', gradient: 'linear-gradient(135deg, #0d0d0d 0%, #1a0a2e 100%)', card_layout: 'normal', sort_order: 2 },
 ];
 for (const c of defaultCollections) {
   const exists = db.prepare('SELECT id FROM collections WHERE id = ?').get(c.id);
-  if (!exists) db.prepare('INSERT INTO collections (id, name, slug, description) VALUES (?, ?, ?, ?)').run(c.id, c.name, c.slug, c.description);
+  if (!exists) {
+    db.prepare(`INSERT INTO collections (id, name, slug, description, image_url, overlay_text, gradient, card_layout, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(c.id, c.name, c.slug, c.description, c.image_url || null, c.overlay_text || null, c.gradient || null, c.card_layout || 'normal', c.sort_order ?? 0);
+  }
+}
+// Eski DB: varsayilan gorsel alanlari doldur (bos ise)
+try {
+  db.prepare(`UPDATE collections SET overlay_text = 'DROP 01', gradient = 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)', card_layout = 'large', sort_order = 0
+    WHERE id = 'drop01' AND (overlay_text IS NULL OR overlay_text = '')`).run();
+  db.prepare(`UPDATE collections SET overlay_text = 'ESS', gradient = 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)', card_layout = 'normal', sort_order = 1
+    WHERE id = 'essentials' AND (overlay_text IS NULL OR overlay_text = '')`).run();
+  db.prepare(`UPDATE collections SET overlay_text = 'LTD', gradient = 'linear-gradient(135deg, #0d0d0d 0%, #1a0a2e 100%)', card_layout = 'normal', sort_order = 2
+    WHERE id = 'limited' AND (overlay_text IS NULL OR overlay_text = '')`).run();
+} catch {}
+
+function collectionSlugFromName(name) {
+  return String(name || 'koleksiyon')
+    .toLowerCase()
+    .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'koleksiyon';
+}
+
+function uniqueCollectionSlug(base) {
+  let s = base;
+  let n = 0;
+  while (db.prepare('SELECT id FROM collections WHERE slug = ?').get(s)) {
+    s = base + '-' + nanoid(4).toLowerCase();
+    if (++n > 20) break;
+  }
+  return s;
 }
 
 // Seed default settings
 const settingsDefaults = {
   site_name: 'NEXO',
   announcement_enabled: '1',
-  announcement: 'UCRETSIZ KARGO — 1500 TL VE UZERI  YENİ KOLEKSİYON CIKTI — NEXO DROP 01  30 GUN IADE HAKKI',
+  announcement: 'UCRETSIZ KARGO — 1500 TL VE UZERI|YENI KOLEKSIYON — NEXO DROP 01|30 GUN IADE HAKKI',
   announcement_speed: '30',
   announcement_bg: '#000000',
   announcement_color: '#ffffff',
+  marquee_enabled: '1',
+  marquee_line: 'NEXO|STREETWEAR|DROP 01|2026|DEFINE YOUR ERA',
+  marquee_speed: '20',
   free_shipping_threshold: '1500',
+  free_shipping_all: '0',
   shipping_cost: '49.90',
   instagram: 'https://instagram.com/nexo',
   email: 'info@nexo.com.tr',
+  site_status: 'open',
+  site_closed_message: 'Sitemiz gecici olarak kapalidir. Yakinda gorusmek uzere.',
 };
 for (const [key, value] of Object.entries(settingsDefaults)) {
   const exists = db.prepare('SELECT key FROM settings WHERE key = ?').get(key);
   if (!exists) db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(key, value);
+}
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS season_templates (
+    id TEXT PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    is_active INTEGER DEFAULT 0
+  );
+  CREATE TABLE IF NOT EXISTS template_products (
+    template_id TEXT NOT NULL,
+    product_id TEXT NOT NULL,
+    PRIMARY KEY (template_id, product_id)
+  );
+`);
+const tplSeed = [
+  { id: 'tpl_yazlik', code: 'yazlik', name: 'Yazlik sablon' },
+  { id: 'tpl_kislik', code: 'kislik', name: 'Kislik sablon' },
+  { id: 'tpl_genel', code: 'genel', name: 'Genel sablon' },
+];
+for (const t of tplSeed) {
+  const ex = db.prepare('SELECT id FROM season_templates WHERE id = ?').get(t.id);
+  if (!ex) db.prepare('INSERT INTO season_templates (id, code, name, is_active) VALUES (?, ?, ?, 0)').run(t.id, t.code, t.name);
 }
 
 // ─── MULTER (memory storage for Cloudinary) ───────────────────────
@@ -226,35 +316,110 @@ function parseProduct(p) {
     images: JSON.parse(p.images || '[]'),
     featured: Boolean(p.featured),
     stock_unlimited: Boolean(p.stock_unlimited),
+    active: p.active === undefined || p.active === null ? true : Boolean(p.active),
   };
+}
+
+function isSiteClosed() {
+  try {
+    const r = db.prepare("SELECT value FROM settings WHERE key = 'site_status'").get();
+    return r && r.value === 'closed';
+  } catch (e) {
+    return false;
+  }
+}
+
+function getActiveSeasonTemplateId() {
+  try {
+    const r = db.prepare('SELECT id FROM season_templates WHERE is_active = 1 LIMIT 1').get();
+    return r ? r.id : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function productAllowedInPublicStorefront(productId) {
+  const tplId = getActiveSeasonTemplateId();
+  if (!tplId) return true;
+  const row = db.prepare('SELECT 1 FROM template_products WHERE template_id = ? AND product_id = ?').get(tplId, productId);
+  return Boolean(row);
 }
 
 // ─── PUBLIC API ───────────────────────────────────────────────────
 
+function makeSlug(name) {
+  return name.toLowerCase()
+    .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')
+    + '-' + nanoid(6).toLowerCase();
+}
+
 app.get('/api/products', (req, res) => {
+  if (isSiteClosed()) {
+    return res.json({ success: true, products: [], total: 0, site_closed: true });
+  }
   const { category, collection, featured, limit, offset, search } = req.query;
-  let query = 'SELECT * FROM products WHERE 1=1';
+  const tplId = getActiveSeasonTemplateId();
+  let query;
   const params = [];
-  if (category && category !== 'all') { query += ' AND category = ?'; params.push(category); }
-  if (collection) { query += ' AND collection = ?'; params.push(collection); }
-  if (featured === '1') { query += ' AND featured = 1'; }
-  if (search) { query += ' AND (name LIKE ? OR description LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
-  query += ' ORDER BY created_at DESC';
-  if (limit) { query += ' LIMIT ?'; params.push(parseInt(limit)); }
-  if (offset) { query += ' OFFSET ?'; params.push(parseInt(offset)); }
+  if (tplId) {
+    query = 'SELECT p.* FROM products p INNER JOIN template_products tp ON tp.product_id = p.id AND tp.template_id = ? WHERE COALESCE(p.active,1) = 1';
+    params.push(tplId);
+    if (category && category !== 'all') { query += ' AND p.category = ?'; params.push(category); }
+    if (collection) { query += ' AND p.collection = ?'; params.push(collection); }
+    if (featured === '1') { query += ' AND p.featured = 1'; }
+    if (search) { query += ' AND (p.name LIKE ? OR p.description LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
+    query += ' ORDER BY p.created_at DESC';
+  } else {
+    query = 'SELECT * FROM products WHERE COALESCE(active,1) = 1';
+    if (category && category !== 'all') { query += ' AND category = ?'; params.push(category); }
+    if (collection) { query += ' AND collection = ?'; params.push(collection); }
+    if (featured === '1') { query += ' AND featured = 1'; }
+    if (search) { query += ' AND (name LIKE ? OR description LIKE ?)'; params.push(`%${search}%`, `%${search}%`); }
+    query += ' ORDER BY created_at DESC';
+  }
+  if (limit) { query += ' LIMIT ?'; params.push(parseInt(limit, 10)); }
+  if (offset) { query += ' OFFSET ?'; params.push(parseInt(offset, 10)); }
   const products = db.prepare(query).all(...params).map(parseProduct);
   res.json({ success: true, products, total: products.length });
 });
 
 app.get('/api/products/:id', (req, res) => {
-  const p = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
+  if (isSiteClosed()) {
+    return res.status(404).json({ success: false, message: 'Urun bulunamadi', site_closed: true });
+  }
+  const p = db.prepare('SELECT * FROM products WHERE id = ? OR slug = ?').get(req.params.id, req.params.id);
   if (!p) return res.status(404).json({ success: false, message: 'Urun bulunamadi' });
+  if (p.active != null && Number(p.active) === 0) return res.status(404).json({ success: false, message: 'Urun bulunamadi' });
+  if (!productAllowedInPublicStorefront(p.id)) return res.status(404).json({ success: false, message: 'Urun bulunamadi' });
   res.json({ success: true, product: parseProduct(p) });
 });
 
+app.get('/api/admin/products', requireAdmin, (req, res) => {
+  const search = req.query.search;
+  let rows;
+  if (search && String(search).trim()) {
+    const q = '%' + String(search).trim() + '%';
+    rows = db.prepare('SELECT * FROM products WHERE name LIKE ? OR id LIKE ? OR slug LIKE ? ORDER BY created_at DESC').all(q, q, q);
+  } else {
+    rows = db.prepare('SELECT * FROM products ORDER BY created_at DESC').all();
+  }
+  res.json({ success: true, products: rows.map(parseProduct) });
+});
+
 app.get('/api/collections', (req, res) => {
-  const collections = db.prepare('SELECT * FROM collections ORDER BY created_at ASC').all();
+  if (isSiteClosed()) return res.json({ success: true, collections: [] });
+  const collections = db.prepare('SELECT * FROM collections ORDER BY sort_order ASC, name ASC').all();
   res.json({ success: true, collections });
+});
+
+app.get('/api/collections/by-slug/:slug', (req, res) => {
+  if (isSiteClosed()) return res.status(404).json({ success: false, message: 'Koleksiyon bulunamadi' });
+  const slug = String(req.params.slug || '').trim();
+  if (!slug) return res.status(400).json({ success: false, message: 'Slug gerekli' });
+  const col = db.prepare('SELECT * FROM collections WHERE slug = ? OR id = ?').get(slug, slug);
+  if (!col) return res.status(404).json({ success: false, message: 'Koleksiyon bulunamadi' });
+  res.json({ success: true, collection: col });
 });
 
 app.get('/api/settings', (req, res) => {
@@ -265,6 +430,7 @@ app.get('/api/settings', (req, res) => {
 });
 
 app.post('/api/orders', (req, res) => {
+  if (isSiteClosed()) return res.status(403).json({ success: false, message: 'Site su an kapali' });
   const { customer_name, customer_email, customer_phone, address, items, total } = req.body;
   if (!customer_name || !customer_email || !items || !total) {
     return res.status(400).json({ success: false, message: 'Eksik bilgi' });
@@ -356,10 +522,16 @@ app.post('/api/discount/check', (req, res) => {
 // ─── ORDERS (enhanced) ────────────────────────────────────────────
 
 app.post('/api/orders', (req, res) => {
-  if (!req.session.userId) return res.status(401).json({ success: false, message: 'Siparis vermek icin giris yapiniz' });
   const { customer_name, customer_email, customer_phone, address, address_detail, city, district, zip_code, items, total, discount_code, discount_amount, shipping_cost, shipping_method, card_last4 } = req.body;
   if (!customer_name || !customer_email || !items || total === undefined) {
     return res.status(400).json({ success: false, message: 'Eksik bilgi' });
+  }
+
+  // user_id: session'dan al, yoksa email ile bul
+  let userId = req.session.userId || null;
+  if (!userId && customer_email) {
+    const u = db.prepare('SELECT id FROM users WHERE email = ?').get(customer_email.toLowerCase());
+    if (u) userId = u.id;
   }
 
   // Validate discount code if provided
@@ -371,11 +543,11 @@ app.post('/api/orders', (req, res) => {
   const id = nanoid(12).toUpperCase();
   db.prepare(`INSERT INTO orders (id, user_id, customer_name, customer_email, customer_phone, address, address_detail, city, district, zip_code, items, total, discount_code, discount_amount, shipping_cost, shipping_method, card_last4, payment_status)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run(id, req.session.userId, customer_name, customer_email, customer_phone || '', address || '', address_detail || '', city || '', district || '', zip_code || '',
+    .run(id, userId, customer_name, customer_email, customer_phone || '', address || '', address_detail || '', city || '', district || '', zip_code || '',
       JSON.stringify(items), parseFloat(total), discount_code || null, parseFloat(discount_amount || 0),
       parseFloat(shipping_cost || 0), shipping_method || 'standard', card_last4 || null, 'pending');
 
-  logActivity(req.session.userId, customer_email, 'order_placed', { orderId: id, total, items: JSON.parse(JSON.stringify(items)).length });
+  logActivity(userId, customer_email, 'order_placed', { orderId: id, total });
   res.json({ success: true, orderId: id, message: 'Siparisıniz alindi!' });
 });
 
@@ -388,8 +560,16 @@ app.get('/api/orders/:id', (req, res) => {
 });
 
 app.get('/api/my/orders', (req, res) => {
-  if (!req.session.userId) return res.status(401).json({ success: false, message: 'Giris yapiniz' });
-  const orders = db.prepare('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC').all(req.session.userId);
+  if (!req.session.userId && !req.session.userEmail) return res.status(401).json({ success: false, message: 'Giris yapiniz' });
+  let orders;
+  if (req.session.userId) {
+    // user_id ile bul, yoksa email ile de ara
+    orders = db.prepare('SELECT * FROM orders WHERE user_id = ? OR customer_email = ? ORDER BY created_at DESC')
+      .all(req.session.userId, req.session.userEmail || '');
+  } else {
+    orders = db.prepare('SELECT * FROM orders WHERE customer_email = ? ORDER BY created_at DESC')
+      .all(req.session.userEmail);
+  }
   res.json({ success: true, orders: orders.map(o => ({ ...o, items: JSON.parse(o.items || '[]') })) });
 });
 
@@ -419,10 +599,11 @@ app.get('/api/admin/check', (req, res) => { res.json({ isAdmin: Boolean(req.sess
 
 app.post('/api/admin/products', requireAdmin, upload.array('images', 8), async (req, res) => {
   try {
-    const { name, description, price, old_price, category, sizes, colors, stock, stock_unlimited, stock_status, featured, collection } = req.body;
+    const { name, description, price, old_price, category, sizes, colors, stock, stock_unlimited, stock_status, featured, collection, active } = req.body;
     if (!name || !price || !category) return res.status(400).json({ success: false, message: 'Ad, fiyat ve kategori zorunlu' });
 
     const id = nanoid(10);
+    const slug = makeSlug(name);
 
     // Upload files to Cloudinary
     const uploadedUrls = [];
@@ -438,14 +619,15 @@ app.post('/api/admin/products', requireAdmin, upload.array('images', 8), async (
     const parsedSizes = sizes ? (typeof sizes === 'string' ? (sizes.startsWith('[') ? JSON.parse(sizes) : sizes.split(',').map(s => s.trim()).filter(Boolean)) : sizes) : ['S','M','L','XL','XXL'];
     const parsedColors = colors ? (typeof colors === 'string' ? (colors.startsWith('[') ? JSON.parse(colors) : colors.split(',').map(s => s.trim()).filter(Boolean)) : colors) : [];
 
-    db.prepare('INSERT INTO products (id, name, description, price, old_price, category, sizes, colors, images, stock, stock_unlimited, stock_status, featured, collection) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(id, name, description || '', parseFloat(price), old_price ? parseFloat(old_price) : null, category,
+    db.prepare('INSERT INTO products (id, slug, name, description, price, old_price, category, sizes, colors, images, stock, stock_unlimited, stock_status, featured, collection, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(id, slug, name, description || '', parseFloat(price), old_price ? parseFloat(old_price) : null, category,
         JSON.stringify(parsedSizes), JSON.stringify(parsedColors), JSON.stringify(allImages),
         stock ? parseInt(stock) : null,
         stock_unlimited === '1' ? 1 : 0,
         stock_status || 'in_stock',
         featured === '1' ? 1 : 0,
-        collection || 'drop01');
+        collection || 'drop01',
+        active === '0' ? 0 : 1);
 
     res.json({ success: true, id, message: 'Urun eklendi' });
   } catch(e) {
@@ -454,12 +636,19 @@ app.post('/api/admin/products', requireAdmin, upload.array('images', 8), async (
   }
 });
 
+app.put('/api/admin/products/:id/active', requireAdmin, (req, res) => {
+  const next = req.body.active === 0 || req.body.active === false || req.body.active === '0' ? 0 : 1;
+  const info = db.prepare('UPDATE products SET active = ? WHERE id = ?').run(next, req.params.id);
+  if (!info.changes) return res.status(404).json({ success: false, message: 'Urun bulunamadi' });
+  res.json({ success: true, active: next });
+});
+
 app.put('/api/admin/products/:id', requireAdmin, upload.array('images', 8), async (req, res) => {
   try {
     const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
     if (!product) return res.status(404).json({ success: false, message: 'Urun bulunamadi' });
 
-    const { name, description, price, old_price, category, sizes, colors, stock, stock_unlimited, stock_status, featured, collection, keep_images } = req.body;
+    const { name, description, price, old_price, category, sizes, colors, stock, stock_unlimited, stock_status, featured, collection, keep_images, active } = req.body;
 
     const uploadedUrls = [];
     for (const file of (req.files || [])) {
@@ -481,7 +670,13 @@ app.put('/api/admin/products/:id', requireAdmin, upload.array('images', 8), asyn
     const parsedSizes = sizes ? (typeof sizes === 'string' ? (sizes.startsWith('[') ? JSON.parse(sizes) : sizes.split(',').map(s => s.trim()).filter(Boolean)) : sizes) : JSON.parse(product.sizes);
     const parsedColors = colors ? (typeof colors === 'string' ? (colors.startsWith('[') ? JSON.parse(colors) : colors.split(',').map(s => s.trim()).filter(Boolean)) : colors) : JSON.parse(product.colors);
 
-    db.prepare('UPDATE products SET name=?, description=?, price=?, old_price=?, category=?, sizes=?, colors=?, images=?, stock=?, stock_unlimited=?, stock_status=?, featured=?, collection=? WHERE id=?')
+    const prevActive = product.active == null || Number(product.active) !== 0 ? 1 : 0;
+    let activeVal = prevActive;
+    if (active !== undefined && active !== null && String(active) !== '') {
+      activeVal = (active === '0' || active === 0 || active === false) ? 0 : 1;
+    }
+
+    db.prepare('UPDATE products SET name=?, description=?, price=?, old_price=?, category=?, sizes=?, colors=?, images=?, stock=?, stock_unlimited=?, stock_status=?, featured=?, collection=?, active=? WHERE id=?')
       .run(name || product.name, description !== undefined ? description : product.description,
         price ? parseFloat(price) : product.price, old_price ? parseFloat(old_price) : null,
         category || product.category, JSON.stringify(parsedSizes), JSON.stringify(parsedColors), JSON.stringify(finalImages),
@@ -490,6 +685,7 @@ app.put('/api/admin/products/:id', requireAdmin, upload.array('images', 8), asyn
         stock_status || product.stock_status || 'in_stock',
         featured === '1' ? 1 : 0,
         collection || product.collection,
+        activeVal,
         req.params.id);
 
     res.json({ success: true, message: 'Urun guncellendi' });
@@ -509,28 +705,61 @@ app.delete('/api/admin/products/:id', requireAdmin, (req, res) => {
 // ─── ADMIN COLLECTIONS ────────────────────────────────────────────
 
 app.get('/api/admin/collections', requireAdmin, (req, res) => {
-  const collections = db.prepare('SELECT * FROM collections ORDER BY created_at ASC').all();
+  const collections = db.prepare('SELECT * FROM collections ORDER BY sort_order ASC, name ASC').all();
   res.json({ success: true, collections });
 });
 
 app.post('/api/admin/collections', requireAdmin, (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, slug: bodySlug, image_url, overlay_text, gradient, card_layout, sort_order } = req.body;
   if (!name) return res.status(400).json({ success: false, message: 'Koleksiyon adi zorunlu' });
   const id = nanoid(8);
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  let slug = (bodySlug && String(bodySlug).trim()) ? collectionSlugFromName(bodySlug) : collectionSlugFromName(name);
+  slug = uniqueCollectionSlug(slug);
+  const layout = card_layout === 'large' ? 'large' : 'normal';
+  const ord = sort_order !== undefined && sort_order !== '' && !Number.isNaN(parseInt(sort_order, 10)) ? parseInt(sort_order, 10) : 0;
   try {
-    db.prepare('INSERT INTO collections (id, name, slug, description) VALUES (?, ?, ?, ?)').run(id, name, slug, description || '');
+    db.prepare(`INSERT INTO collections (id, name, slug, description, image_url, overlay_text, gradient, card_layout, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+      id, name, slug, description || '',
+      image_url || null,
+      overlay_text || null,
+      gradient || null,
+      layout,
+      ord
+    );
     res.json({ success: true, id, message: 'Koleksiyon eklendi' });
-  } catch(e) {
-    res.status(400).json({ success: false, message: 'Bu slug zaten mevcut' });
+  } catch (e) {
+    res.status(400).json({ success: false, message: 'Slug veya veri hatasi' });
   }
 });
 
 app.put('/api/admin/collections/:id', requireAdmin, (req, res) => {
-  const { name, description } = req.body;
   const col = db.prepare('SELECT * FROM collections WHERE id = ?').get(req.params.id);
   if (!col) return res.status(404).json({ success: false, message: 'Koleksiyon bulunamadi' });
-  db.prepare('UPDATE collections SET name=?, description=? WHERE id=?').run(name || col.name, description !== undefined ? description : col.description, req.params.id);
+  const { name, description, slug: bodySlug, image_url, overlay_text, gradient, card_layout, sort_order } = req.body;
+  let newSlug = col.slug;
+  if (bodySlug !== undefined && String(bodySlug).trim()) {
+    newSlug = collectionSlugFromName(bodySlug);
+    if (newSlug !== col.slug) {
+      const clash = db.prepare('SELECT id FROM collections WHERE slug = ? AND id != ?').get(newSlug, req.params.id);
+      if (clash) newSlug = uniqueCollectionSlug(newSlug);
+    }
+  }
+  const layout = card_layout === 'large' ? 'large' : (card_layout === 'normal' ? 'normal' : (col.card_layout || 'normal'));
+  const ord = sort_order !== undefined && sort_order !== '' && !Number.isNaN(parseInt(sort_order, 10))
+    ? parseInt(sort_order, 10)
+    : (col.sort_order != null ? col.sort_order : 0);
+  db.prepare(`UPDATE collections SET name=?, slug=?, description=?, image_url=?, overlay_text=?, gradient=?, card_layout=?, sort_order=? WHERE id=?`).run(
+    name !== undefined && String(name).trim() ? name : col.name,
+    newSlug,
+    description !== undefined ? description : col.description,
+    image_url !== undefined ? (image_url || null) : col.image_url,
+    overlay_text !== undefined ? (overlay_text || null) : col.overlay_text,
+    gradient !== undefined ? (gradient || null) : col.gradient,
+    layout,
+    ord,
+    req.params.id
+  );
   res.json({ success: true, message: 'Koleksiyon guncellendi' });
 });
 
@@ -689,12 +918,187 @@ app.delete('/api/admin/discounts/:id', requireAdmin, (req, res) => {
   res.json({ success: true, message: 'Silindi' });
 });
 
+// Admin: ürün slug değiştir
+app.put('/api/admin/products/:id/slug', requireAdmin, (req, res) => {
+  const { slug } = req.body;
+  if (!slug) return res.status(400).json({ success: false, message: 'Slug gerekli' });
+  const clean = slug.toLowerCase()
+    .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
+    .replace(/[^a-z0-9-]+/g,'-').replace(/^-|-$/g,'').substring(0, 80);
+  const existing = db.prepare('SELECT id FROM products WHERE slug = ? AND id != ?').get(clean, req.params.id);
+  if (existing) return res.status(400).json({ success: false, message: 'Bu slug zaten kullaniliyor' });
+  db.prepare('UPDATE products SET slug = ? WHERE id = ?').run(clean, req.params.id);
+  res.json({ success: true, slug: clean, url: '/urun/' + clean });
+});
+
+// Admin: siparis route degistir (custom slug)
+app.put('/api/admin/orders/:id/slug', requireAdmin, (req, res) => {
+  const { slug } = req.body;
+  if (!slug) return res.status(400).json({ success: false, message: 'Slug gerekli' });
+  // Slug sadece harf, rakam, tire icersin
+  const clean = slug.toLowerCase().replace(/[^a-z0-9-]/g, '').substring(0, 50);
+  // Baska siparisde ayni slug var mi?
+  const existing = db.prepare('SELECT id FROM orders WHERE custom_slug = ? AND id != ?').get(clean, req.params.id);
+  if (existing) return res.status(400).json({ success: false, message: 'Bu slug zaten kullaniliyor' });
+  db.prepare('UPDATE orders SET custom_slug = ? WHERE id = ?').run(clean, req.params.id);
+  res.json({ success: true, slug: clean, url: '/siparis/' + clean });
+});
+
+// Public: slug ile siparis getir
+app.get('/api/order-by-slug/:slug', (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE custom_slug = ? OR id = ?').get(req.params.slug, req.params.slug.toUpperCase());
+  if (!order) return res.status(404).json({ success: false, message: 'Siparis bulunamadi' });
+  res.json({ success: true, order: { ...order, items: JSON.parse(order.items || '[]') } });
+});
+
+// Kullanıcı talep gönder
+app.post('/api/tickets', (req, res) => {
+  const { subject, message } = req.body;
+  if (!subject || !message) return res.status(400).json({ success: false, message: 'Konu ve mesaj gerekli' });
+  const id = nanoid(10).toUpperCase();
+  const userId = req.session.userId || null;
+  const userName = req.session.userName || (req.body.name || '');
+  const userEmail = req.session.userEmail || (req.body.email || '');
+  db.prepare('INSERT INTO tickets (id, user_id, user_name, user_email, subject, message) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(id, userId, userName, userEmail, subject, message);
+  res.json({ success: true, id, message: 'Talebiniz alindi' });
+});
+
+// Kullanıcı kendi taleplerini gör (aynı e-postayla acilmis veya user_id ile eslesen tum talepler)
+app.get('/api/tickets/my', (req, res) => {
+  if (!req.session.userId && !req.session.userEmail) return res.status(401).json({ success: false, message: 'Giris yapiniz' });
+  let tickets;
+  if (req.session.userId && req.session.userEmail) {
+    tickets = db.prepare(
+      "SELECT * FROM tickets WHERE user_id = ? OR lower(trim(COALESCE(user_email,''))) = lower(trim(?)) ORDER BY created_at DESC"
+    ).all(req.session.userId, req.session.userEmail);
+  } else if (req.session.userId) {
+    tickets = db.prepare('SELECT * FROM tickets WHERE user_id = ? ORDER BY created_at DESC').all(req.session.userId);
+  } else {
+    tickets = db.prepare(
+      "SELECT * FROM tickets WHERE lower(trim(COALESCE(user_email,''))) = lower(trim(?)) ORDER BY created_at DESC"
+    ).all(req.session.userEmail);
+  }
+  const seen = new Set();
+  const unique = [];
+  for (const t of tickets) {
+    if (seen.has(t.id)) continue;
+    seen.add(t.id);
+    unique.push(t);
+  }
+  res.json({ success: true, tickets: unique });
+});
+
+// Admin: tüm talepler
+app.get('/api/admin/tickets', requireAdmin, (req, res) => {
+  const { search } = req.query;
+  let tickets;
+  if (search) {
+    const q = '%' + search + '%';
+    tickets = db.prepare('SELECT * FROM tickets WHERE id LIKE ? OR user_name LIKE ? OR user_email LIKE ? OR subject LIKE ? OR message LIKE ? ORDER BY created_at DESC').all(q, q, q, q, q);
+  } else {
+    tickets = db.prepare('SELECT * FROM tickets ORDER BY created_at DESC').all();
+  }
+  res.json({ success: true, tickets });
+});
+
+// Admin: talebe cevap yaz / düzenle
+app.put('/api/admin/tickets/:id', requireAdmin, (req, res) => {
+  try {
+    const { admin_reply, status } = req.body;
+    const ticket = db.prepare('SELECT * FROM tickets WHERE id = ?').get(req.params.id);
+    if (!ticket) return res.status(404).json({ success: false, message: 'Talep bulunamadi' });
+    db.prepare("UPDATE tickets SET admin_reply = ?, admin_reply_at = datetime('now'), status = ? WHERE id = ?")
+      .run(admin_reply !== undefined ? admin_reply : ticket.admin_reply, status || ticket.status, req.params.id);
+    res.json({ success: true, message: 'Guncellendi' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, message: 'Sunucu hatasi' });
+  }
+});
+
+// Admin: talep sil
+app.delete('/api/admin/tickets/:id', requireAdmin, (req, res) => {
+  db.prepare('DELETE FROM tickets WHERE id = ?').run(req.params.id);
+  res.json({ success: true, message: 'Talep silindi' });
+});
+
+// ─── ADMIN SEASON TEMPLATES (yazlik / kislik / genel) ─────────────
+
+app.get('/api/admin/season-templates', requireAdmin, (req, res) => {
+  const templates = db.prepare('SELECT * FROM season_templates ORDER BY code').all();
+  const out = templates.map((t) => ({
+    id: t.id,
+    code: t.code,
+    name: t.name,
+    is_active: Boolean(t.is_active),
+    product_ids: db.prepare('SELECT product_id FROM template_products WHERE template_id = ?').all(t.id).map((r) => r.product_id),
+  }));
+  res.json({ success: true, templates: out });
+});
+
+app.put('/api/admin/season-templates/active', requireAdmin, (req, res) => {
+  let { template_id } = req.body;
+  template_id = template_id && String(template_id).trim() ? String(template_id).trim() : null;
+  const tx = db.transaction(() => {
+    db.prepare('UPDATE season_templates SET is_active = 0').run();
+    if (template_id) {
+      const t = db.prepare('SELECT id FROM season_templates WHERE id = ?').get(template_id);
+      if (t) db.prepare('UPDATE season_templates SET is_active = 1 WHERE id = ?').run(template_id);
+    }
+  });
+  tx();
+  res.json({ success: true, message: 'Aktif sablon guncellendi' });
+});
+
+app.put('/api/admin/season-templates/:id/products', requireAdmin, (req, res) => {
+  const { product_ids } = req.body;
+  if (!Array.isArray(product_ids)) return res.status(400).json({ success: false, message: 'product_ids dizi olmali' });
+  const t = db.prepare('SELECT id FROM season_templates WHERE id = ?').get(req.params.id);
+  if (!t) return res.status(404).json({ success: false, message: 'Sablon bulunamadi' });
+  const del = db.prepare('DELETE FROM template_products WHERE template_id = ?');
+  const ins = db.prepare('INSERT OR IGNORE INTO template_products (template_id, product_id) VALUES (?, ?)');
+  const tx = db.transaction(() => {
+    del.run(req.params.id);
+    for (const pid of product_ids) {
+      if (!pid || typeof pid !== 'string') continue;
+      const p = db.prepare('SELECT id FROM products WHERE id = ?').get(pid);
+      if (p) ins.run(req.params.id, pid);
+    }
+  });
+  tx();
+  res.json({ success: true, message: 'Urun listesi kaydedildi' });
+});
+
+app.put('/api/admin/season-templates/:id', requireAdmin, (req, res) => {
+  const { name } = req.body;
+  const t = db.prepare('SELECT id FROM season_templates WHERE id = ?').get(req.params.id);
+  if (!t) return res.status(404).json({ success: false, message: 'Sablon bulunamadi' });
+  if (name != null && String(name).trim()) {
+    db.prepare('UPDATE season_templates SET name = ? WHERE id = ?').run(String(name).trim(), req.params.id);
+  }
+  res.json({ success: true, message: 'Sablon guncellendi' });
+});
+
 // ─── SPA ROUTES ───────────────────────────────────────────────────
 
+function redirectIfSiteClosed(req, res, next) {
+  if (isSiteClosed()) return res.redirect(302, '/');
+  next();
+}
+
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
-app.get('/checkout', (req, res) => res.sendFile(path.join(__dirname, 'public', 'checkout.html')));
-app.get('/urun/:id', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/checkout', redirectIfSiteClosed, (req, res) => res.sendFile(path.join(__dirname, 'public', 'checkout.html')));
+app.get('/siparis/:id', redirectIfSiteClosed, (req, res) => res.sendFile(path.join(__dirname, 'public', 'order.html')));
+app.get('/urun/:id', redirectIfSiteClosed, (req, res) => res.sendFile(path.join(__dirname, 'public', 'product.html')));
+app.get('/koleksiyon/:slug', redirectIfSiteClosed, (req, res) => res.sendFile(path.join(__dirname, 'public', 'collection.html')));
+app.get('*', (req, res) => {
+  const p = (req.path || '').split('?')[0];
+  if (isSiteClosed() && p !== '/' && p !== '' && !p.startsWith('/admin')) {
+    return res.redirect(302, '/');
+  }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // ─── START ────────────────────────────────────────────────────────
 app.listen(PORT, () => {
