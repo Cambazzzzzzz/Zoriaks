@@ -1,5 +1,6 @@
-﻿[phases.install]
-cmds = ["npm install"]
+﻿# Railway / Nixpacks: better-sqlite3 icin sistem derleme araclari
+[variables]
+NIXPACKS_NODE_VERSION = "20"
 
-[start]
-cmd = "node server.js"
+[phases.setup]
+aptPkgs = ["python3", "python-is-python3", "make", "g++", "libsqlite3-dev"]
