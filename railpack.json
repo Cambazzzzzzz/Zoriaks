@@ -1,0 +1,9 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "node",
+  "packages": {
+    "node": "20",
+    "python": "3.12"
+  },
+  "buildAptPackages": ["make", "g++", "libsqlite3-dev"]
+}
