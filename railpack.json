@@ -1,9 +1,14 @@
 {
   "$schema": "https://schema.railpack.com",
-  "provider": "node",
   "packages": {
-    "node": "20",
-    "python": "3.12"
+    "node": "20"
   },
-  "buildAptPackages": ["make", "g++", "libsqlite3-dev"]
+  "buildAptPackages": [
+    "build-essential",
+    "python3",
+    "libsqlite3-dev"
+  ],
+  "deploy": {
+    "startCommand": "node server.js"
+  }
 }
