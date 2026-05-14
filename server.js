@@ -616,12 +616,20 @@ app.post('/api/admin/products', requireAdmin, upload.array('images', 8), async (
     try { extraImages = JSON.parse(req.body.image_urls || '[]'); } catch {}
     const allImages = [...uploadedUrls, ...extraImages];
 
+    // secure_url d\u00f6n\u00fc\u015fl\u00fc bazen bo\u015f/undefined gelebiliyor; \u00e7ak\u0131\u015f\u0131\u0131 engellemek i\u00e7in sadece string, uzun ve url format\u0131 i\u00e7erenleri al\u0131yoruz.
+    const filteredImages = allImages.filter(u => typeof u === 'string' && u.trim().length > 10);
+
     const parsedSizes = sizes ? (typeof sizes === 'string' ? (sizes.startsWith('[') ? JSON.parse(sizes) : sizes.split(',').map(s => s.trim()).filter(Boolean)) : sizes) : ['S','M','L','XL','XXL'];
     const parsedColors = colors ? (typeof colors === 'string' ? (colors.startsWith('[') ? JSON.parse(colors) : colors.split(',').map(s => s.trim()).filter(Boolean)) : colors) : [];
 
+    const finalImages = filteredImages.length ? filteredImages : (product && product.images ? JSON.parse(product.images || '[]') : []);
+
+
+
     db.prepare('INSERT INTO products (id, slug, name, description, price, old_price, category, sizes, colors, images, stock, stock_unlimited, stock_status, featured, collection, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
       .run(id, slug, name, description || '', parseFloat(price), old_price ? parseFloat(old_price) : null, category,
-        JSON.stringify(parsedSizes), JSON.stringify(parsedColors), JSON.stringify(allImages),
+         JSON.stringify(parsedSizes), JSON.stringify(parsedColors), JSON.stringify(finalImages),
+
         stock ? parseInt(stock) : null,
         stock_unlimited === '1' ? 1 : 0,
         stock_status || 'in_stock',
