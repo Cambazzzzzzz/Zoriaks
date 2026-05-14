@@ -622,7 +622,7 @@ app.post('/api/admin/products', requireAdmin, upload.array('images', 8), async (
     const parsedSizes = sizes ? (typeof sizes === 'string' ? (sizes.startsWith('[') ? JSON.parse(sizes) : sizes.split(',').map(s => s.trim()).filter(Boolean)) : sizes) : ['S','M','L','XL','XXL'];
     const parsedColors = colors ? (typeof colors === 'string' ? (colors.startsWith('[') ? JSON.parse(colors) : colors.split(',').map(s => s.trim()).filter(Boolean)) : colors) : [];
 
-    const finalImages = filteredImages.length ? filteredImages : (product && product.images ? JSON.parse(product.images || '[]') : []);
+    const finalImages = filteredImages;
 
 
 
@@ -667,12 +667,13 @@ app.put('/api/admin/products/:id', requireAdmin, upload.array('images', 8), asyn
     let extraImages = [];
     try { extraImages = JSON.parse(req.body.image_urls || '[]'); } catch {}
 
+    const filterUrls = arr => arr.filter(u => typeof u === 'string' && u.trim().length > 10);
     let finalImages;
     if (keep_images === '1') {
-      finalImages = [...JSON.parse(product.images || '[]'), ...uploadedUrls, ...extraImages];
+      finalImages = filterUrls([...JSON.parse(product.images || '[]'), ...uploadedUrls, ...extraImages]);
     } else {
-      finalImages = [...uploadedUrls, ...extraImages];
-      if (finalImages.length === 0) finalImages = JSON.parse(product.images || '[]');
+      const merged = filterUrls([...uploadedUrls, ...extraImages]);
+      finalImages = merged.length > 0 ? merged : JSON.parse(product.images || '[]');
     }
 
     const parsedSizes = sizes ? (typeof sizes === 'string' ? (sizes.startsWith('[') ? JSON.parse(sizes) : sizes.split(',').map(s => s.trim()).filter(Boolean)) : sizes) : JSON.parse(product.sizes);
