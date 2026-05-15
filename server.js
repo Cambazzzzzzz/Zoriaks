@@ -1109,6 +1109,47 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// ─── SEASON TEMPLATES ────────────────────────────────────────────
+
+app.get('/api/admin/season-templates', requireAdmin, (req, res) => {
+  const templates = db.prepare('SELECT * FROM season_templates ORDER BY name ASC').all();
+  const result = templates.map(t => {
+    const product_ids = db.prepare('SELECT product_id FROM template_products WHERE template_id = ?').all(t.id).map(r => r.product_id);
+    return { ...t, product_ids };
+  });
+  res.json({ success: true, templates: result });
+});
+
+app.put('/api/admin/season-templates/active', requireAdmin, (req, res) => {
+  const { template_id } = req.body;
+  db.prepare('UPDATE season_templates SET is_active = 0').run();
+  if (template_id) {
+    const info = db.prepare('UPDATE season_templates SET is_active = 1 WHERE id = ?').run(template_id);
+    if (!info.changes) return res.status(404).json({ success: false, message: 'Sablon bulunamadi' });
+  }
+  res.json({ success: true, message: template_id ? 'Sablon aktif edildi' : 'Tum sablonlar devre disi' });
+});
+
+app.put('/api/admin/season-templates/:id', requireAdmin, (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ success: false, message: 'Isim gerekli' });
+  const info = db.prepare('UPDATE season_templates SET name = ? WHERE id = ?').run(name, req.params.id);
+  if (!info.changes) return res.status(404).json({ success: false, message: 'Sablon bulunamadi' });
+  res.json({ success: true, message: 'Sablon guncellendi' });
+});
+
+app.put('/api/admin/season-templates/:id/products', requireAdmin, (req, res) => {
+  const { product_ids } = req.body;
+  if (!Array.isArray(product_ids)) return res.status(400).json({ success: false, message: 'product_ids array olmali' });
+  const tpl = db.prepare('SELECT id FROM season_templates WHERE id = ?').get(req.params.id);
+  if (!tpl) return res.status(404).json({ success: false, message: 'Sablon bulunamadi' });
+  db.prepare('DELETE FROM template_products WHERE template_id = ?').run(req.params.id);
+  const insert = db.prepare('INSERT INTO template_products (template_id, product_id) VALUES (?, ?)');
+  const insertMany = db.transaction((ids) => { for (const pid of ids) insert.run(req.params.id, pid); });
+  insertMany(product_ids);
+  res.json({ success: true, message: product_ids.length + ' urun kaydedildi' });
+});
+
 // ─── START ────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log('NEXO Server calisiyor -> http://localhost:' + PORT);

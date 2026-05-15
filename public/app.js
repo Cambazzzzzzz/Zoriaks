@@ -241,20 +241,14 @@ function setupModal() {
 // ── Gallery state ─────────────────────────────────────────────────
 let galleryImages = [];
 let galleryIndex = 0;
-let zoomActive = false;
-let zoomScale = 1;
-let zoomOrigin = { x: 50, y: 50 };
-
 function gallerySet(index) {
   if (!galleryImages.length) return;
   galleryIndex = (index + galleryImages.length) % galleryImages.length;
   const mainImg = document.getElementById('galleryMain');
   if (mainImg) {
-    mainImg.style.transform = 'scale(1)';
-    mainImg.style.transformOrigin = '50% 50%';
-    zoomActive = false;
-    zoomScale = 1;
+    if (typeof resetProductZoom === 'function') resetProductZoom(mainImg);
     mainImg.src = galleryImages[galleryIndex];
+    if (typeof initProductZoom === 'function') initProductZoom(mainImg);
   }
   // Update thumbnails
   document.querySelectorAll('.gallery-thumb').forEach((t, i) => {
@@ -265,34 +259,6 @@ function gallerySet(index) {
 function galleryPrev() { gallerySet(galleryIndex - 1); }
 function galleryNext() { gallerySet(galleryIndex + 1); }
 
-function setupZoom(imgEl) {
-  imgEl.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (!zoomActive) {
-      const rect = imgEl.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      imgEl.style.transformOrigin = x + '% ' + y + '%';
-      imgEl.style.transform = 'scale(2.5)';
-      imgEl.style.cursor = 'zoom-out';
-      zoomActive = true;
-    } else {
-      imgEl.style.transform = 'scale(1)';
-      imgEl.style.transformOrigin = '50% 50%';
-      imgEl.style.cursor = 'zoom-in';
-      zoomActive = false;
-    }
-  });
-
-  imgEl.addEventListener('mousemove', (e) => {
-    if (!zoomActive) return;
-    const rect = imgEl.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    imgEl.style.transformOrigin = x + '% ' + y + '%';
-  });
-}
-
 async function openProduct(id) {
   try {
     const r = await fetch('/api/products/' + id);
@@ -302,11 +268,10 @@ async function openProduct(id) {
 
     galleryImages = (p.images && p.images.length) ? p.images : [];
     galleryIndex = 0;
-    zoomActive = false;
 
     // Main image area
     const mainImgHtml = galleryImages.length
-      ? '<img id="galleryMain" src="' + galleryImages[0] + '" alt="' + p.name + '" style="cursor:zoom-in;transition:transform .2s">'
+      ? '<img id="galleryMain" src="' + galleryImages[0] + '" alt="' + p.name + '">'
       : '<div class="modal-img-placeholder">N</div>';
 
     // Thumbnails
@@ -353,9 +318,8 @@ async function openProduct(id) {
       + '</div>'
       + '</div>';
 
-    // Setup zoom on main image
     const mainImg = document.getElementById('galleryMain');
-    if (mainImg) setupZoom(mainImg);
+    if (mainImg && typeof initProductZoom === 'function') initProductZoom(mainImg);
 
     document.getElementById('productModal').classList.add('open');
     document.getElementById('modalOverlay').classList.add('open');
