@@ -225,11 +225,19 @@ img{max-width:100%;display:block}
 
 /* ── GALLERY ─────────────────────────────────────────────────── */
 .modal-content{display:grid;grid-template-columns:1fr 1fr;gap:0}
-.modal-gallery{display:flex;flex-direction:column;background:var(--card2);border-radius:var(--radius-lg) 0 0 var(--radius-lg);overflow:hidden}
-.gallery-main-wrap{position:relative;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:400px}
-.gallery-main-img{width:100%;height:100%;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.gallery-main-img img{width:100%;height:100%;object-fit:contain;max-height:min(70vh,560px);transition:transform .25s ease;cursor:zoom-in;user-select:none;-webkit-user-drag:none}
-.gallery-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:40px;height:40px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;transition:all .2s;backdrop-filter:blur(4px)}
+.modal-gallery{display:flex;flex-direction:column;background:var(--card2);border-radius:var(--radius-lg) 0 0 var(--radius-lg);overflow:visible}
+.gallery-main-wrap{position:relative;flex:1;display:flex;align-items:center;justify-content:center;min-height:400px}
+.gallery-main-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:var(--radius-lg) 0 0 0}
+.gallery-main-img img{width:100%;height:100%;object-fit:contain;max-height:min(70vh,560px);display:block;user-select:none;-webkit-user-drag:none;cursor:crosshair}
+
+/* Zoom lens (kare, Trendyol tarzı) */
+.zoom-lens{position:absolute;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.08);pointer-events:none;display:none;z-index:10;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+
+/* Zoom result panel — resmin sağında açılır */
+.zoom-result{position:absolute;left:calc(100% + 12px);top:0;width:420px;height:420px;border:1px solid var(--border);border-radius:var(--radius);background:#0d0d0d;overflow:hidden;display:none;z-index:20;pointer-events:none;box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.zoom-result-img{position:absolute;top:0;left:0;transform-origin:top left}
+
+.gallery-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:40px;height:40px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;transition:all .2s;backdrop-filter:blur(4px)}
 .gallery-arrow:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3)}
 .gallery-prev{left:12px}
 .gallery-next{right:12px}

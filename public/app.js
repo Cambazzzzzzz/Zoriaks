@@ -156,9 +156,11 @@ async function loadCollectionsHome() {
 function collectionHomeCard(c) {
   const large = (c.card_layout === 'large') ? 'collection-card large' : 'collection-card';
   const slug = encodeURIComponent(c.slug || c.id);
-  const su = String(c.image_url || '').trim().replace(/"/g, '%22');
-  const imgStyle = su
-    ? 'background-image:url("' + su + '");'
+  const bg = (window.NexoImage && NexoImage.cssBackgroundUrl)
+    ? NexoImage.cssBackgroundUrl(c.image_url)
+    : null;
+  const imgStyle = bg && bg !== 'none'
+    ? 'background-image:' + bg + ';'
     : ('background:' + (c.gradient ? String(c.gradient) : 'linear-gradient(135deg,#0a0a0a,#1a1a2e)') + ';');
   const overlay = escHtml(c.overlay_text || c.name || '');
   return '<a href="/koleksiyon/' + slug + '" class="' + large + '">'
@@ -241,16 +243,110 @@ function setupModal() {
 // ── Gallery state ─────────────────────────────────────────────────
 let galleryImages = [];
 let galleryIndex = 0;
+
+// ── Trendyol-style zoom ───────────────────────────────────────────
+let _zoomCleanup = null;
+
+function initProductZoom(imgEl) {
+  // Temizle önceki zoom
+  if (_zoomCleanup) { _zoomCleanup(); _zoomCleanup = null; }
+
+  const wrap = imgEl.closest('.gallery-main-wrap');
+  if (!wrap) return;
+
+  // Mobilde zoom yok
+  if (window.innerWidth < 1025) return;
+
+  // Lens ve result panel oluştur
+  const lens = document.createElement('div');
+  lens.className = 'zoom-lens';
+  const LENS_SIZE = 140;
+  lens.style.width = LENS_SIZE + 'px';
+  lens.style.height = LENS_SIZE + 'px';
+  wrap.appendChild(lens);
+
+  const result = document.createElement('div');
+  result.className = 'zoom-result';
+  const resultImg = document.createElement('img');
+  resultImg.className = 'zoom-result-img';
+  resultImg.src = imgEl.src;
+  result.appendChild(resultImg);
+  wrap.appendChild(result);
+
+  // Result panel boyutu
+  const RESULT_W = 420;
+  const RESULT_H = 420;
+  result.style.width = RESULT_W + 'px';
+  result.style.height = RESULT_H + 'px';
+
+  function onMove(e) {
+    const rect = imgEl.getBoundingClientRect();
+    let cx = e.clientX - rect.left;
+    let cy = e.clientY - rect.top;
+
+    // Lens'i sınırla
+    cx = Math.max(LENS_SIZE / 2, Math.min(rect.width - LENS_SIZE / 2, cx));
+    cy = Math.max(LENS_SIZE / 2, Math.min(rect.height - LENS_SIZE / 2, cy));
+
+    lens.style.left = (cx - LENS_SIZE / 2) + 'px';
+    lens.style.top  = (cy - LENS_SIZE / 2) + 'px';
+
+    // Zoom oranı: result boyutu / lens boyutu
+    const scaleX = (imgEl.naturalWidth  || imgEl.width)  / rect.width;
+    const scaleY = (imgEl.naturalHeight || imgEl.height) / rect.height;
+    const zoomX  = RESULT_W / LENS_SIZE;
+    const zoomY  = RESULT_H / LENS_SIZE;
+
+    // Result img boyutu
+    const rw = rect.width  * zoomX;
+    const rh = rect.height * zoomY;
+    resultImg.style.width  = rw + 'px';
+    resultImg.style.height = rh + 'px';
+
+    // Result img pozisyonu: lens merkezini büyüt
+    const rx = -(cx * zoomX - RESULT_W / 2);
+    const ry = -(cy * zoomY - RESULT_H / 2);
+    resultImg.style.left = rx + 'px';
+    resultImg.style.top  = ry + 'px';
+  }
+
+  function onEnter() {
+    lens.style.display   = 'block';
+    result.style.display = 'block';
+  }
+
+  function onLeave() {
+    lens.style.display   = 'none';
+    result.style.display = 'none';
+  }
+
+  imgEl.addEventListener('mouseenter', onEnter);
+  imgEl.addEventListener('mouseleave', onLeave);
+  imgEl.addEventListener('mousemove',  onMove);
+
+  _zoomCleanup = () => {
+    imgEl.removeEventListener('mouseenter', onEnter);
+    imgEl.removeEventListener('mouseleave', onLeave);
+    imgEl.removeEventListener('mousemove',  onMove);
+    if (lens.parentNode)   lens.parentNode.removeChild(lens);
+    if (result.parentNode) result.parentNode.removeChild(result);
+  };
+}
+
+function swapProductZoomImage(imgEl, src) {
+  imgEl.src = src;
+  // result panel varsa güncelle
+  const wrap = imgEl.closest('.gallery-main-wrap');
+  if (!wrap) return;
+  const ri = wrap.querySelector('.zoom-result-img');
+  if (ri) ri.src = src;
+}
+
 function gallerySet(index) {
   if (!galleryImages.length) return;
   galleryIndex = (index + galleryImages.length) % galleryImages.length;
   const mainImg = document.getElementById('galleryMain');
-  if (mainImg) {
-    if (typeof resetProductZoom === 'function') resetProductZoom(mainImg);
-    mainImg.src = galleryImages[galleryIndex];
-    if (typeof initProductZoom === 'function') initProductZoom(mainImg);
-  }
-  // Update thumbnails
+  if (mainImg) swapProductZoomImage(mainImg, galleryImages[galleryIndex]);
   document.querySelectorAll('.gallery-thumb').forEach((t, i) => {
     t.classList.toggle('active', i === galleryIndex);
   });
@@ -266,19 +362,23 @@ async function openProduct(id) {
     if (!d.success) return;
     const p = d.product;
 
-    galleryImages = (p.images && p.images.length) ? p.images : [];
+    galleryImages = (window.NexoImage && NexoImage.normalizeImageList)
+      ? NexoImage.normalizeImageList(p.images)
+      : ((p.images && p.images.length) ? p.images : []);
     galleryIndex = 0;
 
     // Main image area
     const mainImgHtml = galleryImages.length
-      ? '<img id="galleryMain" src="' + galleryImages[0] + '" alt="' + p.name + '">'
+      ? (NexoImage && NexoImage.imgTag
+        ? NexoImage.imgTag(galleryImages[0], p.name, 'id="galleryMain"')
+        : '<img id="galleryMain" src="' + escHtml(galleryImages[0]) + '" alt="' + escHtml(p.name) + '">')
       : '<div class="modal-img-placeholder">N</div>';
 
     // Thumbnails
     const thumbsHtml = galleryImages.length > 1
       ? '<div class="gallery-thumbs">' + galleryImages.map((img, i) =>
           '<button class="gallery-thumb' + (i === 0 ? ' active' : '') + '" onclick="gallerySet(' + i + ')">'
-          + '<img src="' + img + '" alt=""/></button>'
+          + (NexoImage && NexoImage.imgTag ? NexoImage.imgTag(img, '') : '<img src="' + escHtml(img) + '" alt=""/>') + '</button>'
         ).join('') + '</div>'
       : '';
 
